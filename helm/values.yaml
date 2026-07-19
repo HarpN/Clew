@@ -1,0 +1,39 @@
+# Default values for Clew Helm Chart
+replicaCount: 1
+
+image:
+  repository: clew-assistant
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+ui:
+  port: 8501
+  serviceType: ClusterIP
+
+mobileUi:
+  port: 8000
+  serviceType: ClusterIP
+
+agent:
+  env:
+    LIVEKIT_URL: "wss://livekit.local"
+    LIVEKIT_API_KEY: "dev_key"
+    LIVEKIT_API_SECRET: "dev_secret"
+    OPENAI_API_KEY: "sk-placeholder-key"
+
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  mountPath: /data
+
+postgresql:
+  enabled: false
+  auth:
+    database: "clew_v2"
+    username: "clew_admin"
+    password: "clew_secure_pass"
+
+affinity:
+  strictNodeAffinity: true

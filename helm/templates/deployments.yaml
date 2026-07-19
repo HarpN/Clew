@@ -1,0 +1,187 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-ui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: assistant-ui
+  template:
+    metadata:
+      labels:
+        app: assistant-ui
+        component: core-node
+    spec:
+      initContainers:
+        - name: volume-mount-guard
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until touch /data/.volume-check && rm /data/.volume-check; do
+                echo "CRITICAL: PVC mount path /data is currently read-only or unmounted. Waiting...";
+                sleep 2;
+              done;
+              echo "SUCCESS: PVC mount confirmed active and writable.";
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      containers:
+        - name: streamlit
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["streamlit", "run", "ui/app.py"]
+          ports:
+            - containerPort: {{ .Values.ui.port }}
+          env:
+            - name: DB_PATH
+              value: "/data/assistant.db"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: OPENAI_API_KEY
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-agent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: assistant-agent
+  template:
+    metadata:
+      labels:
+        app: assistant-agent
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: component
+                    operator: In
+                    values:
+                      - core-node
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+        - name: volume-mount-guard
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until touch /data/.volume-check && rm /data/.volume-check; do
+                echo "CRITICAL: PVC mount path /data is unmounted. Waiting for core node sync...";
+                sleep 2;
+              done;
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      containers:
+        - name: livekit-agent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["python", "agent/agent.py", "start"]
+          env:
+            - name: DB_PATH
+              value: "/data/assistant.db"
+            - name: LIVEKIT_URL
+              value: {{ .Values.agent.env.LIVEKIT_URL | quote }}
+            - name: LIVEKIT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: LIVEKIT_API_KEY
+            - name: LIVEKIT_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: LIVEKIT_API_SECRET
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: OPENAI_API_KEY
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-mobile-ui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: assistant-mobile-ui
+  template:
+    metadata:
+      labels:
+        app: assistant-mobile-ui
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: component
+                    operator: In
+                    values:
+                      - core-node
+              topologyKey: "kubernetes.io/hostname"
+      initContainers:
+        - name: volume-mount-guard
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until touch /data/.volume-check && rm /data/.volume-check; do
+                echo "CRITICAL: PVC mount path /data is unmounted. Waiting for core node sync...";
+                sleep 2;
+              done;
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      containers:
+        - name: mobile-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["uvicorn", "mobile_server:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: {{ .Values.mobileUi.port }}
+          env:
+            - name: DB_PATH
+              value: "/data/assistant.db"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: OPENAI_API_KEY
+          volumeMounts:
+            - name: db-data
+              mountPath: /data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-pvc

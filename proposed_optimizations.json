@@ -1,0 +1,101 @@
+[
+  {
+    "id": "prop_e08f38ef",
+    "command_id": "e08f38ef-d195-458f-a387-3e76ff1f3f57",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T16:34:27.757276",
+    "accepted_at": "2026-07-19T16:34:27.765847"
+  },
+  {
+    "id": "prop_2186dff7",
+    "command_id": "2186dff7-2381-455c-b06f-7ebd3fc05975",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T16:34:32.520373",
+    "accepted_at": "2026-07-19T16:34:32.535486"
+  },
+  {
+    "id": "prop_4966a198",
+    "command_id": "4966a198-bef8-4c40-b27f-0ae2e5124585",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T16:34:41.127027",
+    "accepted_at": "2026-07-19T16:34:41.149166"
+  },
+  {
+    "id": "prop_cmd_teth",
+    "command_id": "cmd_tether_test_01",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Always use type annotations on function parameters",
+    "reasoning": "Negative rating (1/5): Always use type annotations on function parameters",
+    "status": "accepted",
+    "created_at": "2026-07-19T16:56:19.720334",
+    "accepted_at": "2026-07-19T16:56:25.065041"
+  },
+  {
+    "id": "prop_6b826bfa",
+    "command_id": "6b826bfa-5f95-4583-9039-f267acb3cb51",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T16:56:24.985574",
+    "accepted_at": "2026-07-19T17:08:42.082089"
+  },
+  {
+    "id": "prop_e106b759",
+    "command_id": "e106b759-a2db-4cc3-bb95-8fbf374fd402",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T17:08:41.999241",
+    "accepted_at": "2026-07-19T17:13:22.540077"
+  },
+  {
+    "id": "prop_b0c1e563",
+    "command_id": "b0c1e563-cb80-4471-ae1a-532f29d5b11c",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T17:13:22.405235",
+    "accepted_at": "2026-07-19T17:15:03.235789"
+  },
+  {
+    "id": "prop_fb51e56b",
+    "command_id": "fb51e56b-9da4-4366-896c-ae581a5f9af4",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T17:15:03.115467",
+    "accepted_at": "2026-07-19T17:17:57.109409"
+  },
+  {
+    "id": "prop_6f08aa67",
+    "command_id": "6f08aa67-e864-4bf7-b2ec-c6e8505b4f94",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "accepted",
+    "created_at": "2026-07-19T17:17:56.959667",
+    "accepted_at": "2026-07-19T17:34:25.835296"
+  },
+  {
+    "id": "prop_cb09ba99",
+    "command_id": "cb09ba99-3b11-4d7c-8b48-a3d9f19458ae",
+    "target_tier": "Tier 2 (Generalist LifeOS)",
+    "hint_text": "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
+    "reasoning": "Negative rating (1/5): Do not auto-approve expenses over threshold without review",
+    "status": "pending",
+    "created_at": "2026-07-19T17:34:25.682716"
+  }
+]

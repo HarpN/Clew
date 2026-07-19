@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-postgresql
+  labels:
+    app: clew-postgresql
+spec:
+  serviceName: {{ .Release.Name }}-postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clew-postgresql
+  template:
+    metadata:
+      labels:
+        app: clew-postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: pgvector/pgvector:pg16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.persistence.storageClass | default "local-path" | quote }}
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-postgresql
+  labels:
+    app: clew-postgresql
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: clew-postgresql

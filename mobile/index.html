@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clew Command Center</title>
+    <!-- Tailwind CSS for modern responsive utility design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font for hyper-clean typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for high-fidelity icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar styling for a high-density dashboard look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
+    </style>
+</head>
+<body class="h-full overflow-hidden bg-slate-950 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
+
+<div class="flex h-full w-full">
+    <!-- Left Sidebar: Compact Global Navigation -->
+    <aside class="hidden md:flex flex-col items-center justify-between py-6 w-20 bg-slate-900 border-r border-slate-800/60 shrink-0">
+        <div class="flex flex-col items-center gap-8">
+            <!-- Brand Logo Glow -->
+            <div class="relative group cursor-pointer">
+                <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <div class="relative bg-slate-950 text-indigo-400 p-3 rounded-xl border border-indigo-500/20">
+                    <i class="fa-solid fa-anchor text-xl"></i>
+                </div>
+            </div>
+            
+            <!-- Navigation Action Items -->
+            <nav class="flex flex-col gap-5">
+                <button onclick="switchTab('dashboard', this)" class="nav-btn active p-3 rounded-xl text-indigo-400 hover:bg-slate-800/50 hover:text-indigo-200 transition-all" title="Command Center">
+                    <i class="fa-solid fa-chart-pie text-lg"></i>
+                </button>
+                <button onclick="switchTab('governance', this)" class="nav-btn p-3 rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 transition-all" title="System Governance">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </button>
+                <button onclick="switchTab('mobile-view', this)" class="nav-btn p-3 rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 transition-all" title="Mobile Simulator">
+                    <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+                </button>
+            </nav>
+        </div>
+
+        <div class="flex flex-col items-center gap-4">
+            <!-- Connection Status Badge -->
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" title="All Systems Operational">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Window Area -->
+    <div class="flex-grow flex flex-col min-w-0 bg-slate-950">
+        <!-- Top Status Bar -->
+        <header class="h-16 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-4">
+                <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Clew Unified Workspace</h1>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 uppercase tracking-wider">v2.1-Postgres</span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <!-- Environment Stats Banner -->
+                <div class="hidden sm:flex items-center gap-4 text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                        <span>Ollama Connection: <strong class="text-slate-200">Local (Llama 3 / Qwen 2.5)</strong></span>
+                    </div>
+                    <div class="w-px h-4 bg-slate-800"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        <span>Vector Memory: <strong class="text-slate-200">pgvector Active</strong></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Workspaces (Dashboard Tab) -->
+        <main id="tab-dashboard" class="tab-content flex-grow flex flex-col lg:flex-row overflow-hidden p-6 gap-6">
+            <!-- Left Side: Working State / Logistics Kanban -->
+            <section class="flex-1 flex flex-col min-w-0 bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
+                <div class="p-5 border-b border-slate-800/60 flex items-center justify-between bg-slate-900/20">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                            <i class="fa-solid fa-list-check text-sm"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate-200">Current Working State</h2>
+                            <p class="text-xs text-slate-500">Active dynamic logistics, queued tasks & reminders</p>
+                        </div>
+                    </div>
+                    <!-- Quick-add Trigger -->
+                    <button onclick="openAddTaskModal()" class="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all shadow-lg shadow-indigo-600/20">
+                        <i class="fa-solid fa-plus mr-1"></i> Quick Task
+                    </button>
+                </div>
+
+                <div id="tasks-container" class="flex-grow overflow-y-auto p-5 space-y-3">
+                    <!-- Tasks will populate dynamically here -->
+                </div>
+            </section>
+
+            <!-- Right Side: Interactive AI Engine & Conversational Interface -->
+            <section class="w-full lg:w-[460px] xl:w-[520px] flex flex-col shrink-0 bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
+                <!-- Chat Window Header -->
+                <div class="p-5 border-b border-slate-800/60 flex items-center justify-between bg-slate-900/20">
+                    <div class="flex items-center gap-3">
+                        <div class="relative flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <i class="fa-solid fa-robot text-sm"></i>
+                            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-slate-900 animate-pulse"></span>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate-200">Agent Command Stream</h2>
+                            <p class="text-xs text-slate-500">Interact and monitor active task automation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversational History Feed -->
+                <div id="chat-messages" class="flex-grow overflow-y-auto p-5 space-y-4">
+                    <!-- Messages dynamically rendered -->
+                </div>
+
+                <!-- Input Interface Deck -->
+                <div class="p-4 border-t border-slate-800/60 bg-slate-900/40">
+                    <!-- Simulated Speech Indicator (WebRTC Waveform Effect) -->
+                    <div id="voice-wave" class="hidden h-10 items-center justify-center gap-1 mb-3">
+                        <div class="w-1 bg-indigo-500 h-2 rounded animate-pulse" style="animation-duration: 0.5s"></div>
+                        <div class="w-1 bg-purple-500 h-6 rounded animate-pulse" style="animation-duration: 0.3s"></div>
+                        <div class="w-1 bg-indigo-400 h-4 rounded animate-pulse" style="animation-duration: 0.7s"></div>
+                        <div class="w-1 bg-indigo-600 h-8 rounded animate-pulse" style="animation-duration: 0.4s"></div>
+                        <div class="w-1 bg-purple-400 h-5 rounded animate-pulse" style="animation-duration: 0.6s"></div>
+                        <div class="w-1 bg-indigo-500 h-2 rounded animate-pulse" style="animation-duration: 0.5s"></div>
+                    </div>
+                    
+                    <form onsubmit="handleSend(event)" class="relative flex items-center">
+                        <input id="chat-input" type="text" placeholder="Tell Clew to execute or add something..." 
+                               class="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl py-3.5 pl-4 pr-24 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
+                        
+                        <!-- Actions Deck inside keyboard -->
+                        <div class="absolute right-2 flex items-center gap-1.5">
+                            <button type="button" onclick="simulateVoiceActive()" class="w-9 h-9 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-400 flex items-center justify-center transition-all" title="Start LiveKit Voice Session">
+                                <i class="fa-solid fa-microphone text-sm"></i>
+                            </button>
+                            <button type="submit" class="w-9 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-md">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- Content Workspaces (Governance Tab) -->
+        <main id="tab-governance" class="tab-content hidden flex-grow flex flex-col overflow-hidden p-6 gap-6">
+            <section class="flex-grow flex flex-col bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
+                <!-- Tab Banner -->
+                <div class="p-6 border-b border-slate-800/60 bg-slate-900/20">
+                    <h2 class="text-lg font-bold text-slate-100">Autonomous Adaptation Governance</h2>
+                    <p class="text-sm text-slate-400">Lock, override, or audit behavioral rules generated by nightly optimization runtimes.</p>
+                </div>
+
+                <div class="flex-grow overflow-y-auto p-6 space-y-6">
+                    <!-- Rule Block 1 -->
+                    <div class="border border-slate-800/60 bg-slate-950/40 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase">Late Night Tech Fatigue</span>
+                                <span class="text-xs text-slate-500">Trigger context: Past 10:00 PM</span>
+                            </div>
+                            <h3 class="font-bold text-slate-200">Strictly defer complex deployments to next morning</h3>
+                            <p class="text-sm text-slate-400">Suggest warm resting block or documentation review.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer" onchange="toggleLockBadge('lock-late-night')">
+                                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+                            </label>
+                            <span id="lock-late-night" class="text-xs text-indigo-400 font-semibold uppercase tracking-wide">Locked</span>
+                        </div>
+                    </div>
+
+                    <!-- Rule Block 2 -->
+                    <div class="border border-slate-800/60 bg-slate-950/40 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 uppercase">Peak Focus Flow</span>
+                                <span class="text-xs text-slate-500">Trigger context: Mid-morning Focus Blocks</span>
+                            </div>
+                            <h3 class="font-bold text-slate-200">Automatically mute incoming notifications</h3>
+                            <p class="text-sm text-slate-400">Defer low-priority Slack updates to protect engineering workflows.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" onchange="toggleLockBadge('lock-peak-focus')">
+                                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+                            </label>
+                            <span id="lock-peak-focus" class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Content Workspaces (Mobile View) -->
+        <main id="tab-mobile-view" class="tab-content hidden flex-grow flex items-center justify-center p-6">
+            <!-- Simulated iPhone Housing -->
+            <div class="w-[340px] h-[680px] bg-black rounded-[48px] p-3 shadow-2xl ring-12 ring-slate-800 flex flex-col overflow-hidden relative">
+                <!-- Speaker Cutout -->
+                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-20 flex justify-center items-center">
+                    <div class="w-12 h-1 bg-slate-800 rounded-full"></div>
+                </div>
+                
+                <!-- Simulated Mobile Dashboard -->
+                <iframe src="about:blank" id="mobile-viewport" class="w-full h-full bg-slate-950 rounded-[38px] overflow-hidden border-0"></iframe>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Dynamic Task Creator Overlay -->
+<div id="task-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+        <h3 class="text-lg font-bold text-slate-100">Log Logistics Task</h3>
+        <form onsubmit="handleAddTask(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
+                <input id="modal-task-title" type="text" placeholder="e.g. Clean deployment branch config" required 
+                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
+                    <select id="modal-task-priority" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <option value="P1">P1 (Immediate)</option>
+                        <option value="P2" selected>P2 (Standard)</option>
+                        <option value="P3">P3 (Fluid)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Energy</label>
+                    <select id="modal-task-energy" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <option value="high">High Energy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low Energy</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 pt-4">
+                <button type="button" onclick="closeAddTaskModal()" class="flex-1 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition-all">Cancel</button>
+                <button type="submit" class="flex-1 p-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-600/20">Add Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Core App State Management
+    let globalState = {
+        tasks: [
+            { id: 1, title: "Flipped raw Postgres pool logic in database.py", priority: "P1", energy_level: "high", status: "pending" },
+            { id: 2, title: "Test LiveKit asynchronous worker thread", priority: "P2", energy_level: "medium", status: "pending" },
+            { id: 3, title: "Refactor unified mobile interface wrapper", priority: "P2", energy_level: "low", status: "pending" }
+        ],
+        chat: [
+            { sender: "user", text: "What is current optimization system state?", time: "05:10 PM", type: "text" },
+            { sender: "agent", text: "All systems active. Late-Night Fatigue triggers have run successfully. Checked out 2 optimization vectors.", time: "05:10 PM", type: "text" }
+        ]
+    };
+
+    // Load Live REST API Data if available, fallback to mock state
+    async function syncBackendData() {
+        try {
+            const [tasksRes, chatRes] = await Promise.all([
+                fetch('/api/tasks'),
+                fetch('/api/chat')
+            ]);
+            if (tasksRes.ok) {
+                const liveTasks = await tasksRes.json();
+                if (Array.isArray(liveTasks) && liveTasks.length > 0) {
+                    globalState.tasks = liveTasks.map(t => ({
+                        id: t.id,
+                        title: t.title,
+                        priority: t.priority === 1 ? 'P1' : (t.priority === 3 ? 'P3' : 'P2'),
+                        energy_level: t.energy_level || 'medium',
+                        status: t.status || 'pending'
+                    }));
+                }
+            }
+            if (chatRes.ok) {
+                const liveChat = await chatRes.json();
+                if (Array.isArray(liveChat) && liveChat.length > 0) {
+                    globalState.chat = liveChat.map(c => ({
+                        sender: c.speaker === 'assistant' ? 'agent' : 'user',
+                        text: c.content || c.message,
+                        time: c.timestamp ? c.timestamp.split('T')[1]?.substring(0, 5) || '05:10 PM' : '05:10 PM',
+                        type: c.source === 'mobile_voice' ? 'voice' : 'text'
+                    }));
+                }
+            }
+            renderTasks();
+            renderChat();
+        } catch (e) {
+            renderTasks();
+            renderChat();
+        }
+    }
+
+    // Render Working State Tasks Grid
+    function renderTasks() {
+        const container = document.getElementById('tasks-container');
+        container.innerHTML = '';
+        
+        const pendingTasks = globalState.tasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
+        if (pendingTasks.length === 0) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12 text-slate-500">
+                    <i class="fa-solid fa-cloud-sun text-4xl mb-4 text-slate-700"></i>
+                    <p class="text-sm">You are completely caught up! No active tasks.</p>
+                </div>
+            `;
+            return;
+        }
+
+        pendingTasks.forEach(t => {
+            // Compute Priority Badge color styles
+            let priorityBadgeColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+            if (t.priority === 'P1') priorityBadgeColor = "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse";
+            if (t.priority === 'P3') priorityBadgeColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
+
+            // Compute Energy Badge color styles
+            let energyBadgeColor = "text-slate-400";
+            if (t.energy_level === 'high') energyBadgeColor = "text-amber-400/80";
+
+            container.innerHTML += `
+                <div class="p-4 bg-slate-950/40 hover:bg-slate-950/70 border border-slate-800/80 hover:border-indigo-500/30 rounded-xl flex items-center justify-between gap-4 transition-all duration-300">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <button onclick="completeTask(${t.id})" class="w-5 h-5 rounded-full border border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/10 flex items-center justify-center transition-all shrink-0">
+                            <i class="fa-solid fa-check text-[10px] text-transparent hover:text-indigo-400"></i>
+                        </button>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-slate-200 truncate">${t.title}</p>
+                            <div class="flex items-center gap-2 mt-1.5">
+                                <span class="text-[10px] px-2 py-0.5 rounded font-bold border ${priorityBadgeColor}">${t.priority}</span>
+                                <span class="text-[10px] text-slate-500 flex items-center gap-1">
+                                    <i class="fa-solid fa-bolt ${energyBadgeColor}"></i> ${t.energy_level} energy
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Task controls -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="postponeTask(${t.id})" class="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-slate-300 transition-all" title="Postpone Task">
+                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                        </button>
+                        <button onclick="deleteTask(${t.id})" class="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-rose-400 transition-all" title="Remove Task">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Render Chat Stream Messages
+    function renderChat() {
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+
+        globalState.chat.forEach(msg => {
+            const isAgent = msg.sender === 'agent';
+            const alignment = isAgent ? 'justify-start' : 'justify-end';
+            const bubbleBg = isAgent ? 'bg-slate-900 border border-slate-800/80 text-slate-200' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/15';
+            const iconBadge = msg.type === 'voice' ? '<i class="fa-solid fa-microphone text-[10px] text-indigo-400 mr-1.5"></i>' : '';
+
+            container.innerHTML += `
+                <div class="flex ${alignment} gap-3">
+                    <div class="max-w-[85%] rounded-2xl px-4 py-3 text-sm ${bubbleBg}">
+                        <div class="flex items-center justify-between gap-4 mb-1">
+                            <span class="text-[10px] font-bold uppercase tracking-wider ${isAgent ? 'text-indigo-400' : 'text-indigo-200'}">${isAgent ? 'Clew' : 'You'}</span>
+                            <span class="text-[9px] text-slate-500">${iconBadge}${msg.time}</span>
+                        </div>
+                        <p class="leading-relaxed leading-6 text-slate-200 font-medium">${msg.text}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Task Actions
+    async function completeTask(id) {
+        try {
+            await fetch(`/api/tasks/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'completed' })
+            });
+        } catch(e) {}
+
+        globalState.tasks = globalState.tasks.filter(t => t.id !== id);
+        renderTasks();
+        
+        globalState.chat.push({
+            sender: "agent",
+            text: "✓ Complete: Removed resolved logistics task from tracking queue database.",
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: "text"
+        });
+        renderChat();
+    }
+
+    async function postponeTask(id) {
+        try {
+            await fetch(`/api/tasks/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'deferred' })
+            });
+        } catch(e) {}
+
+        let task = globalState.tasks.find(t => t.id === id);
+        if(task) {
+            task.priority = "P3";
+            renderTasks();
+        }
+    }
+
+    async function deleteTask(id) {
+        try {
+            await fetch(`/api/tasks/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'completed' })
+            });
+        } catch(e) {}
+
+        globalState.tasks = globalState.tasks.filter(t => t.id !== id);
+        renderTasks();
+    }
+
+    // Modal Operations
+    function openAddTaskModal() {
+        document.getElementById('task-modal').classList.remove('hidden');
+    }
+
+    function closeAddTaskModal() {
+        document.getElementById('task-modal').classList.add('hidden');
+    }
+
+    async function handleAddTask(e) {
+        e.preventDefault();
+        const title = document.getElementById('modal-task-title').value;
+        const priority = document.getElementById('modal-task-priority').value;
+        const energy_level = document.getElementById('modal-task-energy').value;
+
+        try {
+            await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, priority, energy_level })
+            });
+        } catch(e) {}
+
+        const newTask = {
+            id: globalState.tasks.length + 1,
+            title,
+            priority,
+            energy_level,
+            status: "pending"
+        };
+
+        globalState.tasks.unshift(newTask);
+        renderTasks();
+        closeAddTaskModal();
+        e.target.reset();
+    }
+
+    // Chat Message Handlers
+    async function handleSend(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if(!text) return;
+
+        globalState.chat.push({
+            sender: "user",
+            text: text,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: "text"
+        });
+        renderChat();
+        input.value = '';
+
+        try {
+            await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+        } catch(e) {}
+
+        setTimeout(() => {
+            let replyText = "Understood. Searching vector stores and scheduling logistics queue...";
+            
+            if (text.toLowerCase().includes("laundry") || text.toLowerCase().includes("wash")) {
+                replyText = "Executing add_fluid_task: 'Move wash to dryer'. Added successfully with priority P2. Setting automatic warning block.";
+                globalState.tasks.unshift({
+                    id: globalState.tasks.length + 1,
+                    title: "Move wash to dryer",
+                    priority: "P2",
+                    energy_level: "low",
+                    status: "pending"
+                });
+                renderTasks();
+            }
+
+            globalState.chat.push({
+                sender: "agent",
+                text: replyText,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: "text"
+            });
+            renderChat();
+        }, 800);
+    }
+
+    // Simulated Voice Event Loop
+    async function simulateVoiceActive() {
+        const wave = document.getElementById('voice-wave');
+        wave.classList.remove('hidden');
+        wave.classList.add('flex');
+
+        try {
+            await fetch('/api/livekit/token', { method: 'POST' });
+        } catch(e) {}
+
+        setTimeout(() => {
+            globalState.chat.push({
+                sender: "user",
+                text: "Flip the laundry to the dryer in the background list",
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: "voice"
+            });
+            renderChat();
+        }, 2000);
+
+        setTimeout(() => {
+            wave.classList.add('hidden');
+            wave.classList.remove('flex');
+            
+            globalState.chat.push({
+                sender: "agent",
+                text: "Executed local function call. Added 'Move wash to dryer' to logistics list.",
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: "voice"
+            });
+            renderChat();
+
+            globalState.tasks.unshift({
+                id: globalState.tasks.length + 1,
+                title: "Move wash to dryer",
+                priority: "P1",
+                energy_level: "low",
+                status: "pending"
+            });
+            renderTasks();
+        }, 3800);
+    }
+
+    // Toggle Governance Locking status
+    function toggleLockBadge(id) {
+        const badge = document.getElementById(id);
+        if(badge.textContent === 'Locked') {
+            badge.textContent = 'Active';
+            badge.className = "text-xs text-slate-500 font-semibold uppercase tracking-wide";
+        } else {
+            badge.textContent = 'Locked';
+            badge.className = "text-xs text-indigo-400 font-semibold uppercase tracking-wide";
+        }
+    }
+
+    // Global Nav switching
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        const target = document.getElementById(`tab-${tabId}`);
+        if (target) target.classList.remove('hidden');
+
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            b.classList.remove('active', 'text-indigo-400');
+            b.classList.add('text-slate-500');
+        });
+        
+        const activeBtn = btn || (window.event ? window.event.currentTarget : null);
+        if (activeBtn) {
+            activeBtn.classList.add('active', 'text-indigo-400');
+            activeBtn.classList.remove('text-slate-500');
+        }
+    }
+
+    // Initialize Page State
+    window.onload = function() {
+        syncBackendData();
+
+        // Feed mock mobile preview
+        document.getElementById('mobile-viewport').srcdoc = `
+            <!DOCTYPE html>
+            <html class="bg-slate-950 text-slate-200">
+            <head>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            </head>
+            <body class="p-4 flex flex-col justify-between h-screen text-xs overflow-hidden">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <span class="font-bold text-sm text-indigo-400"><i class="fa-solid fa-anchor mr-1"></i> Mobile Hub</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Logistics Feed</span>
+                        <div class="bg-slate-900 border border-slate-800/80 p-3 rounded-lg flex items-center justify-between">
+                            <span>Move wash to dryer</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20">P1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center pb-4">
+                    <button class="w-16 h-16 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-microphone text-xl"></i>
+                    </button>
+                </div>
+            </body>
+            </html>
+        `;
+    }
+</script>
+</body>
+</html>

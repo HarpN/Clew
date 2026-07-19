@@ -1,0 +1,6 @@
+apiVersion: v2
+name: clew
+description: Clew Personal AI Assistant Helm Chart (Streamlit UI, LiveKit Voice Agent, Mobile Hub, Telemetry Optimizer)
+type: application
+version: 0.1.0
+appVersion: "2.0.0"

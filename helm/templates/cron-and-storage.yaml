@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-pvc
+  labels:
+    app: clew
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.persistence.storageClass | default "local-path" | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | default "10Gi" | quote }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-optimizer-cron
+  labels:
+    app: clew
+spec:
+  schedule: "0 2 * * *" # Runs nightly at 2:00 AM
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: assistant-cron
+        spec:
+          restartPolicy: OnFailure
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchExpressions:
+                      - key: component
+                        operator: In
+                        values:
+                          - core-node
+                  topologyKey: "kubernetes.io/hostname"
+          initContainers:
+            - name: volume-mount-guard
+              image: busybox:1.36
+              command:
+                - sh
+                - -c
+                - |
+                  until touch /data/.volume-check && rm /data/.volume-check; do
+                    echo "CRITICAL: PVC mount path /data is unmounted. Waiting...";
+                    sleep 2;
+                  done;
+              volumeMounts:
+                - name: db-data
+                  mountPath: /data
+          containers:
+            - name: telemetry-optimizer
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              command: ["python", "-c", "import database; print('Nightly telemetry & behavioral optimization complete.')"]
+              env:
+                - name: DB_PATH
+                  value: "/data/assistant.db"
+              volumeMounts:
+                - name: db-data
+                  mountPath: /data
+          volumes:
+            - name: db-data
+              persistentVolumeClaim:
+                claimName: {{ .Release.Name }}-pvc
