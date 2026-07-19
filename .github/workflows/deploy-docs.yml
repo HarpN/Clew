@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - v2 # Runs on commits to either the main branch or active V2 development
 
 permissions:
   contents: write # Allows the bot to publish to the gh-pages branch

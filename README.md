@@ -70,7 +70,7 @@ Rather than relying on rigid calendar alarms, Clew evaluates your fluid **Workin
 ## 📁 Repository Structure
 
 ```
-PersonalAssistant/
+Clew/
 ├── database.py                   # Central DB persistence layer (SQLite WAL & Postgres pool)
 ├── mobile_server.py              # FastAPI REST server for Mobile Web Hub
 ├── agent.py                      # Root entrypoint bootstrap for Voice Agent
@@ -176,7 +176,7 @@ POSTGRES_PASSWORD: "clew_secure_pass"
 
 ## 🛢️ V2 PostgreSQL Migration & pgvector
 
-The `v2` branch refactors `database.py` using a dynamic `DialectManager` and `psycopg2` connection pooling (`ThreadedConnectionPool` with `RealDictCursor`).
+Clew V2 refactors database.py using a dynamic DialectManager and psycopg2 connection pooling (ThreadedConnectionPool with RealDictCursor).
 
 ### Running the V2 Database Migration
 Execute the migration script against your PostgreSQL instance to enable `pgvector` and HNSW vector similarity search:
