@@ -23,6 +23,17 @@ class TestCognitiveBrain(unittest.TestCase):
         database.init_db()
         graph_memory.add_node("goal_tether_ai_split", "Split Brain AI Architecture Goal", "GOAL")
 
+    def setUp(self):
+        from unittest.mock import patch
+        import datetime
+        self.datetime_patcher = patch('orchestrator.datetime')
+        self.mock_datetime = self.datetime_patcher.start()
+        self.mock_datetime.now.return_value = datetime.datetime(2026, 7, 20, 12, 0, 0)
+        self.mock_datetime.strptime = datetime.datetime.strptime
+
+    def tearDown(self):
+        self.datetime_patcher.stop()
+
     def test_01_process_thought_cycle_success(self):
         res = asyncio.run(
             clew_brain.process_thought_cycle(
@@ -42,7 +53,8 @@ class TestCognitiveBrain(unittest.TestCase):
             )
         )
         self.assertIsInstance(res, str)
-        self.assertIn("I cannot verify the data integrity", res)
+        self.assertIn("Constraint Guard Veto", res)
+        self.assertIn("Goal-Tether Alignment Failure", res)
 
 if __name__ == "__main__":
     unittest.main()

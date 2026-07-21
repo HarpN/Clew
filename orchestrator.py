@@ -60,6 +60,15 @@ class ConstraintGuard:
 
         return True, None
 
+    @staticmethod
+    def verify_pre_flight(command: IntentCommand, goal_tether_id: Optional[str] = None) -> (bool, Optional[str]):
+        """
+        Runs deterministic check prior to LLM/streaming generation.
+        """
+        if goal_tether_id and not command.goal_tether_id:
+            command.goal_tether_id = goal_tether_id
+        return ConstraintGuard.evaluate(command)
+
 
 import uuid
 
@@ -99,7 +108,14 @@ class OrchestratorEngine:
             if isinstance(raw_input, str):
                 data = json.loads(raw_input)
             else:
-                data = raw_input
+                data = raw_input.copy() if isinstance(raw_input, dict) else raw_input
+                
+            # Auto-correct common LLM action hallucinations to valid ActionTypes
+            if isinstance(data, dict) and "action" in data:
+                act_upper = str(data["action"]).upper()
+                if act_upper in ("SET_REMINDER", "CREATE_TASK", "SCHEDULE_EVENT"):
+                    data["action"] = "ADD_TASK"
+                    
             command = IntentCommand(**data)
             cmd_id = command.command_id or cmd_id
             self.record_confidence(command.domain.value, command.confidence)
@@ -184,13 +200,45 @@ class OrchestratorEngine:
                 metadata=meta
             )
             
+            # Create a user-friendly execution message
+            action_val = command.action
+            domain_val = command.domain.value.title()
+            payload = command.payload or {}
+            
+            if action_val == ActionType.ADD_TASK:
+                title = payload.get("title") or "Unnamed Task"
+                friendly_message = f"I've successfully added the task: \"{title}\" to your {domain_val} list."
+            elif action_val == ActionType.COMPLETE_TASK:
+                task_id = payload.get("task_id") or "unknown"
+                friendly_message = f"I've marked task #{task_id} as completed."
+            elif action_val == ActionType.DEFER_TASK:
+                task_id = payload.get("task_id") or "unknown"
+                friendly_message = f"I've deferred task #{task_id} to a later date."
+            elif action_val == ActionType.LOG_METRIC:
+                name = payload.get("metric_name") or "metric"
+                val = payload.get("metric_value") or 0.0
+                friendly_message = f"I've logged the metric \"{name}\" with a value of {val} in {domain_val}."
+            elif action_val == ActionType.QUERY_STATE:
+                tasks_list = result_data.get("tasks", [])
+                domain_filtered = result_data.get("domain_filtered")
+                if tasks_list:
+                    task_items = [f"- {t['title']} (Priority: P{t['priority']}, Energy: {t['energy_level']})" for t in tasks_list]
+                    tasks_str = "\n".join(task_items)
+                    friendly_message = f"Here is what is currently on your {domain_filtered} list:\n{tasks_str}"
+                elif domain_filtered:
+                    friendly_message = f"Your {domain_filtered} list is currently empty!"
+                else:
+                    friendly_message = f"I've retrieved the current system state snapshot."
+            else:
+                friendly_message = f"Successfully executed {command.action.value} in {domain_val}."
+            
             return CommandResult(
                 command_id=cmd_id,
                 goal_tether_id=command.goal_tether_id,
                 success=True,
                 domain=command.domain,
                 action=command.action,
-                message=f"Successfully executed {command.action.value} in {command.domain.value}",
+                message=friendly_message,
                 data=result_data,
                 latency_ms=round(elapsed, 2),
                 model_used=model_used,
@@ -239,12 +287,24 @@ class OrchestratorEngine:
 
         elif action == ActionType.QUERY_STATE:
             snapshot = memory_service.get_current_state_snapshot()
+            try:
+                tasks = database.get_tasks()
+                domain_lower = command.domain.value.lower()
+                filtered_tasks = []
+                for t in tasks:
+                    tags = t.get("context_tags") or []
+                    if domain_lower in [tag.lower() for tag in tags]:
+                        filtered_tasks.append(t)
+                snapshot["tasks"] = filtered_tasks
+                snapshot["domain_filtered"] = command.domain.value
+            except Exception as ex:
+                logger.error(f"Error fetching tasks for state query: {ex}")
             return snapshot
 
         elif action == ActionType.LOG_METRIC:
             name = p.get("metric_name", "generic_metric")
             val = float(p.get("metric_value", 1.0))
-            database.log_telemetry(action=name, telemetry_metadata={"value": val})
+            database.log_telemetry(action=name, metadata={"value": val})
             return {"metric": name, "value": val}
 
         return {"executed": True}

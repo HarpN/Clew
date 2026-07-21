@@ -27,6 +27,17 @@ class TestLifeOSPipeline(unittest.TestCase):
     def setUpClass(cls):
         database.init_db()
 
+    def setUp(self):
+        from unittest.mock import patch
+        import datetime
+        self.datetime_patcher = patch('orchestrator.datetime')
+        self.mock_datetime = self.datetime_patcher.start()
+        self.mock_datetime.now.return_value = datetime.datetime(2026, 7, 20, 12, 0, 0)
+        self.mock_datetime.strptime = datetime.datetime.strptime
+
+    def tearDown(self):
+        self.datetime_patcher.stop()
+
     def test_01_pydantic_schema_validation(self):
         valid_json = {
             "domain": "LOGISTICS",

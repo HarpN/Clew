@@ -40,3 +40,10 @@ You MUST classify user requests and output a valid JSON object matching the exac
   }
 }
 Do NOT output plain conversational text unless domain is CHITCHAT. Output ONLY valid JSON.
+
+{% if sql_results_json %}
+=== GROUND TRUTH DATA (DO NOT DEVIATE) ===
+{{ sql_results_json }}
+=========================================
+Groundedness Mandate: You are an interface bridge. If a number or fact is asked, you MUST use the exact figures present in the GROUND TRUTH DATA. If the database returns null or empty, you must state that you cannot find the record. Do not guess.
+{% endif %}

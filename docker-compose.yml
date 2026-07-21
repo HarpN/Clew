@@ -26,6 +26,16 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_NOPRUNE=1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   ollama-bootstrap:
     image: curlimages/curl:latest
@@ -40,10 +50,16 @@ services:
         until curl -s http://ollama:11434/api/tags > /dev/null; do
           sleep 2
         done
-        echo "Ollama API is ready. Pulling llama3 model..."
-        curl -X POST http://ollama:11434/api/pull -d '{"name": "llama3"}'
-        echo "Model pull command dispatched successfully!"
-        exit 0
+        echo "Ollama API is ready. Pulling qwen2.5:3b-instruct model..."
+        curl -X POST http://ollama:11434/api/pull -d '{"name": "qwen2.5:3b-instruct"}'
+        echo "Verifying model download..."
+        if curl -s http://ollama:11434/api/tags | grep -q "qwen2.5:3b-instruct"; then
+          echo "Model qwen2.5:3b-instruct verified successfully!"
+          exit 0
+        else
+          echo "Model verification failed!"
+          exit 1
+        fi
 
   clew-ui:
     build:
@@ -60,7 +76,7 @@ services:
       POSTGRES_PASSWORD: clew_secret
       POSTGRES_PORT: "5432"
       OLLAMA_HOST: http://ollama:11434/v1
-      LOCAL_MODEL: llama3
+      LOCAL_MODEL: qwen2.5:3b-instruct
     env_file:
       - .env
     volumes:
@@ -87,7 +103,7 @@ services:
       POSTGRES_PASSWORD: clew_secret
       POSTGRES_PORT: "5432"
       OLLAMA_HOST: http://ollama:11434/v1
-      LOCAL_MODEL: llama3
+      LOCAL_MODEL: qwen2.5:3b-instruct
     env_file:
       - .env
     volumes:
@@ -95,7 +111,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: uvicorn mobile_server:app --host 0.0.0.0 --port 8000
+    command: uvicorn mobile_server:app --host 0.0.0.0 --port 8000 --reload
 
   clew-agent:
     build:
@@ -110,7 +126,7 @@ services:
       POSTGRES_PASSWORD: clew_secret
       POSTGRES_PORT: "5432"
       OLLAMA_HOST: http://ollama:11434/v1
-      LOCAL_MODEL: llama3
+      LOCAL_MODEL: qwen2.5:3b-instruct
     env_file:
       - .env
     volumes:

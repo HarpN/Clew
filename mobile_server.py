@@ -22,11 +22,25 @@ import database
 import orchestrator
 import distillery
 import graph_memory
+from router import ModelRouter
+
+router_instance = ModelRouter()
+
+from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("clew.mobile_server")
 
 app = FastAPI(title="Clew Mobile Hub API", version="2.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # Models
 class TaskCreate(BaseModel):
@@ -97,15 +111,32 @@ class ChatMessagePayload(BaseModel):
     message: str
     source: Optional[str] = "mobile_web"
 
+from brain import clew_brain
+
 @app.post("/api/chat")
-def create_chat_api(payload: ChatMessagePayload):
+async def create_chat_api(payload: ChatMessagePayload):
     try:
         database.add_chat_message(
             content=payload.message,
             source=payload.source or "mobile_web",
             speaker="user"
         )
-        return {"success": True}
+        
+        # Process the intent via the split-brain CognitiveBrain cycle
+        result = await clew_brain.process_thought_cycle(payload.message, None)
+        
+        if isinstance(result, str):
+            reply_text = result
+        else:
+            reply_text = result.message
+        
+        database.add_chat_message(
+            content=reply_text,
+            source="agent",
+            speaker="agent"
+        )
+        
+        return {"success": True, "reply": reply_text}
     except Exception as e:
         logger.error(f"Error adding chat message: {e}")
         raise HTTPException(status_code=500, detail=str(e))

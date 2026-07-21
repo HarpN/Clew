@@ -93,15 +93,15 @@ def get_current_state_snapshot() -> Dict[str, Any]:
         cursor = get_cursor(conn)
         
         # Count active pending tasks
-        cursor.execute("SELECT COUNT(*) FROM tasks WHERE status IN ('pending', 'in_progress')")
-        pending_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) AS count FROM tasks WHERE status IN ('pending', 'in_progress')")
+        pending_count = dict(cursor.fetchone())["count"]
         
         # Get active strategies
         cursor.execute("""
             SELECT s.name, a.strategy, a.is_locked 
             FROM ai_adaptations a
             JOIN behavioral_scenarios s ON a.scenario_id = s.id
-            WHERE a.is_active = 1 OR a.is_active = TRUE
+            WHERE a.is_active
         """)
         adaptations = [dict(r) for r in cursor.fetchall()]
         

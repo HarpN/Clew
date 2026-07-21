@@ -139,6 +139,15 @@ def init_db(db_path: str = DB_PATH) -> None:
     """
     Creates tables safely under the active dialect. Drops legacy behavioral_rules flat table.
     """
+    # [THREAT 2 PATCH] Cerebellar cache invalidation on database restart/reinitialization
+    cache_file = "cerebellum_cache.json"
+    if os.path.exists(cache_file):
+        try:
+            os.remove(cache_file)
+            logger.info("[CEREBELLUM] Schema initialization or DB reboot detected. Stale motor cache cleared.")
+        except Exception as e:
+            logger.error(f"[CEREBELLUM] Failed to clear stale cache: {e}")
+
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
@@ -154,17 +163,25 @@ def init_db(db_path: str = DB_PATH) -> None:
             );
         """)
 
-        # 3. Strategy Adaptations
+        # 3. Setup Strategy Adaptations (Added expires_at for Hippocampus over-fitting guard)
         cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS ai_adaptations (
                 id {dialect.serial_pk},
                 scenario_id INTEGER NOT NULL,
                 strategy TEXT NOT NULL,
-                is_active BOOLEAN DEFAULT TRUE,
-                is_locked BOOLEAN DEFAULT FALSE,
+                is_active BOOLEAN DEFAULT 1,
+                is_locked BOOLEAN DEFAULT 0,
+                expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
+
+        # Ensure expires_at column exists in case db already has active table (Dynamic Migration)
+        try:
+            cursor.execute("ALTER TABLE ai_adaptations ADD COLUMN expires_at TIMESTAMP;")
+            logger.info("[MIGRATION] Added 'expires_at' column to table 'ai_adaptations'.")
+        except Exception:
+            pass # Column already exists
 
         # 4. Adaptation Audit Logging
         cursor.execute(f"""
@@ -325,6 +342,27 @@ def init_db(db_path: str = DB_PATH) -> None:
             );
         """)
 
+        # 16. pgvector extension registration (Postgres) and visual_memories table
+        if dialect.is_postgres:
+            try:
+                cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                logger.info("[DB_INIT] Enabled pgvector extension successfully.")
+            except Exception as ex:
+                logger.error(f"[DB_INIT] Failed to create extension vector: {ex}")
+        
+        cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS visual_memories (
+                id {dialect.serial_pk},
+                tether_id VARCHAR(255),
+                extracted_summary TEXT NOT NULL,
+                raw_ocr_data TEXT,
+                image_path TEXT,
+                embedding {"vector(1536)" if dialect.is_postgres else "TEXT"},
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+
         # Seed default data if behavioral_scenarios is empty
         cursor.execute(dialect.format_query("SELECT COUNT(*) FROM behavioral_scenarios;"))
         count_row = cursor.fetchone()
@@ -358,11 +396,22 @@ def init_db(db_path: str = DB_PATH) -> None:
                         (s_id, strat, act_val, lock_val)
                     )
 
-                cursor.execute(
-                    dialect.format_query("INSERT INTO adaptation_audit_log (scenario_id, old_strategy_id, new_strategy_id, triggering_telemetry, llm_reasoning) VALUES (?, ?, ?, ?, ?);"),
-                    (ids[0], None, 1, "Initial seed", "Established baseline focus window strategy.")
-                )
+            cursor.execute(
+                dialect.format_query("INSERT INTO adaptation_audit_log (scenario_id, old_strategy_id, new_strategy_id, triggering_telemetry, llm_reasoning) VALUES (?, ?, ?, ?, ?);"),
+                (ids[0], None, 1, "Initial seed", "Established baseline focus window strategy.")
+            )
             logger.info("Successfully seeded primary behavioral scenarios and baseline adaptations.")
+
+        # Schema migration check: Add triggering_telemetry if not present (SQLite concurrent run scenario)
+        try:
+            if not dialect.is_postgres:
+                cursor.execute("PRAGMA table_info(adaptation_audit_log);")
+                columns = [col[1] for col in cursor.fetchall()]
+                if "triggering_telemetry" not in columns:
+                    cursor.execute("ALTER TABLE adaptation_audit_log ADD COLUMN triggering_telemetry TEXT;")
+                    logger.info("Migrated SQLite database: added triggering_telemetry column to adaptation_audit_log.")
+        except Exception as migration_err:
+            logger.warning(f"Failed to run schema migration on adaptation_audit_log: {migration_err}")
 
 
 # --- Helper Data Access Functions ---
@@ -553,30 +602,30 @@ def log_telemetry(
         return cursor.lastrowid
 
 
-def get_behavioral_adaptations(only_active: bool = False, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
+def get_behavioral_adaptations(only_active: bool = True, db_path: str = DB_PATH) -> List[Dict[str, Any]]:
     """
     Retrieves adaptations joined dynamically with triggering context scenarios.
+    Filters out expired adaptations automatically.
     """
     sql = """
-        SELECT 
-            a.id AS adaptation_id,
-            a.scenario_id,
-            s.name AS scenario_name,
-            s.description AS scenario_description,
-            a.strategy,
-            a.is_active,
-            a.is_locked,
-            a.created_at
+        SELECT a.id, s.name as scenario_name, s.description, a.strategy, a.is_active, a.is_locked, a.expires_at 
         FROM ai_adaptations a
         JOIN behavioral_scenarios s ON a.scenario_id = s.id
     """
+    conditions = []
     if only_active:
-        sql += " WHERE a.is_active = TRUE" if dialect.is_postgres else " WHERE a.is_active = 1"
-    sql += " ORDER BY a.id DESC"
+        conditions.append("a.is_active = TRUE" if dialect.is_postgres else "a.is_active = 1")
+    
+    # Enforce temporal decay check during fetches
+    conditions.append("(a.expires_at IS NULL OR a.expires_at > CURRENT_TIMESTAMP)")
+    
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
 
     with get_db_connection() as conn:
         cursor = get_cursor(conn)
         cursor.execute(dialect.format_query(sql))
+        # Ensure dict compatibility across both SQLite Row structures and Postgres dict cursors
         return [dict(row) for row in cursor.fetchall()]
 
 
@@ -593,6 +642,7 @@ def get_adaptation_audit_log(limit: int = 50, db_path: str = DB_PATH) -> List[Di
             a_old.strategy AS old_strategy,
             l.new_strategy_id,
             a_new.strategy AS new_strategy,
+            l.triggering_telemetry,
             l.llm_reasoning,
             l.created_at AS timestamp
         FROM adaptation_audit_log l
@@ -809,6 +859,97 @@ def get_intent_feedback(limit: int = 50) -> List[Dict[str, Any]]:
         cursor = get_cursor(conn)
         cursor.execute(dialect.format_query(query), (limit,))
         return [dict(r) for r in cursor.fetchall()]
+
+def store_visual_memory(
+    tether_id: str,
+    summary: str,
+    ocr_data: Optional[str] = None,
+    image_path: Optional[str] = None,
+    embedding: Optional[List[float]] = None,
+    db_path: str = DB_PATH
+) -> int:
+    """
+    Saves parsed visual summary, image path, OCR text and coordinates or vector embedding to the database.
+    """
+    emb_val = None
+    if embedding is not None:
+        if dialect.is_postgres:
+            emb_val = '[' + ','.join(map(str, embedding)) + ']'
+        else:
+            emb_val = json.dumps(embedding)
+            
+    query = """
+        INSERT INTO visual_memories (tether_id, extracted_summary, raw_ocr_data, image_path, embedding)
+        VALUES (?, ?, ?, ?, ?)
+    """
+    with get_db_connection() as conn:
+        cursor = get_cursor(conn)
+        cursor.execute(dialect.format_query(query), (tether_id, summary, ocr_data, image_path, emb_val))
+        if dialect.is_postgres:
+            cursor.execute("SELECT LASTVAL();")
+            res_id = cursor.fetchone()["lastval"]
+        else:
+            res_id = cursor.lastrowid
+        logger.info(f"Stored visual memory #{res_id} for tether '{tether_id}'")
+        return res_id
+
+def query_visual_memories_by_vector(
+    tether_id: str,
+    query_embedding: List[float],
+    limit: int = 3,
+    db_path: str = DB_PATH
+) -> List[Dict[str, Any]]:
+    """
+    Returns top-k closest visual memories based on cosine similarity/distance of embeddings.
+    """
+    if dialect.is_postgres:
+        emb_str = '[' + ','.join(map(str, query_embedding)) + ']'
+        query = """
+            SELECT id, tether_id, extracted_summary, raw_ocr_data, image_path, created_at, (embedding <=> %s::vector) AS cosine_distance
+            FROM visual_memories
+            WHERE tether_id = %s
+            ORDER BY cosine_distance ASC
+            LIMIT %s
+        """
+        with get_db_connection() as conn:
+            cursor = get_cursor(conn)
+            cursor.execute(query, (emb_str, tether_id, limit))
+            return [dict(r) for r in cursor.fetchall()]
+    else:
+        # SQLite python fallback calculation for cosine distance
+        import math
+        query = "SELECT id, tether_id, extracted_summary, raw_ocr_data, image_path, embedding, created_at FROM visual_memories WHERE tether_id = ?"
+        with get_db_connection() as conn:
+            cursor = get_cursor(conn)
+            cursor.execute(query, (tether_id,))
+            rows = cursor.fetchall()
+            
+        results = []
+        for r in rows:
+            row_dict = dict(r)
+            emb_raw = row_dict.pop("embedding", None)
+            
+            emb_list = None
+            if emb_raw:
+                try:
+                    emb_list = json.loads(emb_raw)
+                except Exception:
+                    pass
+            
+            distance = 1.0
+            if emb_list and len(emb_list) == len(query_embedding):
+                dot_product = sum(u * v for u, v in zip(emb_list, query_embedding))
+                norm_u = math.sqrt(sum(u * u for u in emb_list))
+                norm_v = math.sqrt(sum(v * v for v in query_embedding))
+                if norm_u > 0 and norm_v > 0:
+                    cos_sim = dot_product / (norm_u * norm_v)
+                    distance = 1.0 - cos_sim
+                    
+            row_dict["cosine_distance"] = distance
+            results.append(row_dict)
+            
+        results.sort(key=lambda x: x["cosine_distance"])
+        return results[:limit]
 
 
 if __name__ == "__main__":

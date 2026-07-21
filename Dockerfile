@@ -7,7 +7,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     curl \
     sqlite3 \
+    jq \
     && rm -rf /var/lib/apt/lists/*
+
+# Install LiveKit CLI for hot-reloading
+RUN curl -sSL https://get.livekit.io/cli | bash
+
 
 WORKDIR /app
 

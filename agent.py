@@ -6,7 +6,8 @@ import os
 import sys
 
 # Ensure agent directory is in path and execute agent/agent.py
-from agent.agent import JobProcess, WorkerOptions, entrypoint
+from agent.agent import WorkerOptions, entrypoint
+from livekit.agents import cli
 
 if __name__ == "__main__":
-    JobProcess.run(WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))

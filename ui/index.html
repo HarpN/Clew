@@ -270,7 +270,7 @@
 </div>
 
 <script>
-    const API_BASE = window.location.origin.includes(':8502') ? 'http://localhost:8008' : '';
+    const API_BASE = 'http://localhost:8008';
 
     let globalState = {
         tasks: [
@@ -306,7 +306,7 @@
                 if (Array.isArray(liveChat) && liveChat.length > 0) {
                     globalState.chat = liveChat.map(c => ({
                         command_id: c.metadata ? (typeof c.metadata === 'string' ? JSON.parse(c.metadata).command_id : c.metadata.command_id) : 'cmd_' + c.id,
-                        sender: c.speaker === 'assistant' ? 'agent' : 'user',
+                        sender: (c.speaker === 'assistant' || c.speaker === 'agent') ? 'agent' : 'user',
                         text: c.content || c.message,
                         time: c.timestamp ? c.timestamp.split('T')[1]?.substring(0, 5) || '05:10 PM' : '05:10 PM',
                         type: c.source === 'mobile_voice' ? 'voice' : 'text'
@@ -590,28 +590,15 @@
         input.value = '';
 
         try {
-            await fetch(`${API_BASE}/api/chat`, {
+            const res = await fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text })
             });
-        } catch(e) {}
-
-        setTimeout(() => {
-            let replyText = "Understood. Intent processed via Multi-Model Router.";
+            const data = await res.json();
             
-            if (text.toLowerCase().includes("laundry") || text.toLowerCase().includes("wash")) {
-                replyText = "Executing add_fluid_task: 'Move wash to dryer'. Added with priority P2.";
-                globalState.tasks.unshift({
-                    id: globalState.tasks.length + 1,
-                    title: "Move wash to dryer",
-                    priority: "P2",
-                    energy_level: "low",
-                    status: "pending"
-                });
-                renderTasks();
-            }
-
+            let replyText = data.reply || "Understood. Intent processed via Multi-Model Router.";
+            
             globalState.chat.push({
                 command_id: 'cmd_' + (Date.now() + 1),
                 sender: "agent",
@@ -620,7 +607,10 @@
                 type: "text"
             });
             renderChat();
-        }, 800);
+            syncBackendData(); // Refresh tasks and chat in case the agent created one or database was updated
+        } catch(e) {
+            console.error("Error processing chat:", e);
+        }
     }
 
     async function simulateVoiceActive() {
