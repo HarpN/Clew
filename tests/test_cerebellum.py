@@ -47,8 +47,13 @@ class TestCerebellumCaching(unittest.TestCase):
         prompt = "add clean the room to chores"
         goal_tether_id = "goal_tether_chores"
 
-        # Mock the database addition to keep it deterministic and fast
-        with patch('orchestrator.orchestrator._execute_command', return_value={"task_id": 123, "title": "clean the room"}):
+        # Mock the database addition to keep it deterministic and fast, and mock datetime for daytime execution
+        import datetime
+        fake_now = datetime.datetime(2026, 7, 22, 10, 0, 0)
+        with patch('orchestrator.orchestrator._execute_command', return_value={"task_id": 123, "title": "clean the room"}), \
+             patch('constraint_guard.datetime.datetime') as mock_datetime:
+            mock_datetime.now.return_value = fake_now
+            mock_datetime.time = datetime.time
             # 1. Issue command 4 times: should NOT route via hot-path, but update registry
             for i in range(4):
                 # Ensure no hot path has been compiled

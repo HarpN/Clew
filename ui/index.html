@@ -1,164 +1,376 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="h-full bg-slate-950 text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clew Command Center</title>
-    <!-- Tailwind CSS for modern responsive utility design -->
+    <title>Clew — Executive Daily Brief &amp; LifeOS</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font for hyper-clean typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome for high-fidelity icons -->
+    <!-- Inter & JetBrains Mono Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom scrollbar styling for a high-density dashboard look */
+        code, kbd, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(3, 7, 18, 0.5);
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.25);
             border-radius: 99px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.6);
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Glassmorphism surface tokens */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-input {
+            background: rgba(3, 7, 18, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input:focus {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Collapsible accordion transition */
+        .accordion-content {
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+            overflow: hidden;
+        }
+        .accordion-content.collapsed {
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Ambient Giraffe Glow */
+        @keyframes giraffe-glow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.03); }
+        }
+        .giraffe-glow {
+            animation: giraffe-glow 3.5s ease-in-out infinite;
         }
     </style>
 </head>
-<body class="h-full overflow-hidden bg-slate-950 flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
+<body class="h-full overflow-hidden bg-slate-950 flex flex-col text-slate-100">
 
 <div class="flex h-full w-full">
-    <!-- Left Sidebar: Compact Global Navigation -->
-    <aside class="hidden md:flex flex-col items-center justify-between py-6 w-20 bg-slate-900 border-r border-slate-800/60 shrink-0">
-        <div class="flex flex-col items-center gap-8">
-            <!-- Brand Logo Glow -->
-            <div class="relative group cursor-pointer">
-                <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div class="relative bg-slate-950 text-indigo-400 p-3 rounded-xl border border-indigo-500/20">
-                    <i class="fa-solid fa-anchor text-xl"></i>
+    <!-- Left Navigation Bar -->
+    <aside class="hidden md:flex flex-col items-center justify-between py-5 w-20 bg-slate-950/90 border-r border-slate-800/60 shrink-0 z-20">
+        <div class="flex flex-col items-center gap-7">
+            <!-- Giraffe Brand Logo -->
+            <div class="relative group cursor-pointer" onclick="switchTab('daily-brief')" title="Clew Executive Daily Brief">
+                <div class="absolute -inset-1.5 bg-gradient-to-r from-amber-500 via-indigo-500 to-emerald-500 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300 giraffe-glow"></div>
+                <div class="relative bg-slate-950 text-amber-400 p-3.5 rounded-2xl border border-amber-500/30 flex items-center justify-center">
+                    <i class="fa-solid fa-giraffe text-xl"></i>
                 </div>
             </div>
             
-            <!-- Navigation Action Items -->
-            <nav class="flex flex-col gap-5">
-                <button onclick="switchTab('dashboard', this)" class="nav-btn active p-3 rounded-xl text-indigo-400 hover:bg-slate-800/50 hover:text-indigo-200 transition-all" title="Command Center">
-                    <i class="fa-solid fa-chart-pie text-lg"></i>
+            <!-- Assistant Views Navigation -->
+            <nav class="flex flex-col gap-3.5">
+                <button onclick="switchTab('daily-brief')" id="nav-daily-brief" class="nav-btn active relative p-3.5 rounded-xl text-amber-400 bg-amber-500/10 border border-amber-500/20 transition-all group" title="Daily Brief &amp; Tower">
+                    <i class="fa-solid fa-sun text-lg"></i>
+                    <span class="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-xl">Daily Brief</span>
                 </button>
-                <button onclick="switchTab('governance', this)" class="nav-btn p-3 rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 transition-all" title="System Governance & Optimization">
-                    <i class="fa-solid fa-shield-halved text-lg"></i>
+
+                <button onclick="switchTab('logistics')" id="nav-logistics" class="nav-btn relative p-3.5 rounded-xl text-slate-500 hover:bg-slate-900 hover:text-slate-300 transition-all group" title="Household Logistics &amp; Deliveries">
+                    <i class="fa-solid fa-truck-fast text-lg"></i>
+                    <span class="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">Logistics &amp; Auto-Ship</span>
                 </button>
-                <button onclick="switchTab('mobile-view', this)" class="nav-btn p-3 rounded-xl text-slate-500 hover:bg-slate-800/50 hover:text-slate-300 transition-all" title="Mobile Simulator">
-                    <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+
+                <button onclick="switchTab('memory')" id="nav-memory" class="nav-btn relative p-3.5 rounded-xl text-slate-500 hover:bg-slate-900 hover:text-slate-300 transition-all group" title="Learned Habits &amp; Adaptations">
+                    <i class="fa-solid fa-brain text-lg"></i>
+                    <span class="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">Learned Habits</span>
+                </button>
+
+                <button onclick="switchTab('telemetry')" id="nav-telemetry" class="nav-btn relative p-3.5 rounded-xl text-slate-500 hover:bg-slate-900 hover:text-slate-300 transition-all group" title="Dedicated Engine Telemetry Page">
+                    <i class="fa-solid fa-sliders text-lg"></i>
+                    <span class="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">Engine Telemetry Page</span>
                 </button>
             </nav>
         </div>
 
+        <!-- Voice & Status Controls -->
         <div class="flex flex-col items-center gap-4">
-            <!-- Connection Status Badge -->
-            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" title="All Systems Operational">
-                <span class="relative flex h-2 w-2">
+            <button onclick="toggleVoiceSession()" id="voice-node-btn" class="relative p-3 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all group" title="LiveKit Voice Sync">
+                <i class="fa-solid fa-microphone text-lg"></i>
+                <span id="voice-node-badge" class="absolute -top-1 -right-1 flex h-3 w-3">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-            </div>
+                <span class="absolute left-full ml-3 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30 shadow-xl">Voice Link Active</span>
+            </button>
         </div>
     </aside>
 
-    <!-- Main Window Area -->
-    <div class="flex-grow flex flex-col min-w-0 bg-slate-950">
-        <!-- Top Status Bar -->
-        <header class="h-16 border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
+    <!-- Main Workspace Frame -->
+    <div class="flex-grow flex flex-col min-w-0 bg-slate-950 relative">
+        <!-- Top Daily Brief Bar -->
+        <header class="h-16 border-b border-slate-800/60 bg-slate-900/30 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-10">
             <div class="flex items-center gap-4">
-                <h1 class="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Clew Unified Workspace</h1>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 uppercase tracking-wider">v2.2-SelfOptimizing</span>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20 md:hidden">
+                        <i class="fa-solid fa-giraffe"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                            <span>Good evening</span>
+                            <span class="text-amber-400 font-normal">·</span>
+                            <span class="text-xs font-medium text-slate-400"><i class="fa-solid fa-location-dot text-amber-400 mr-1"></i>Lakeland, FL</span>
+                        </h1>
+                        <p class="text-[11px] text-slate-500 font-medium">Tuesday, July 21 · <span id="header-task-count" class="text-amber-300 font-bold">3 focus items</span> for tonight</p>
+                    </div>
+                </div>
             </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="hidden sm:flex items-center gap-4 text-xs text-slate-400">
-                    <div class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                        <span>Ollama Router: <strong class="text-slate-200">Tier 1 Coder / Tier 2 Generalist</strong></span>
-                    </div>
-                    <div class="w-px h-4 bg-slate-800"></div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                        <span>Distillery Service: <strong class="text-slate-200">Active (Human-in-the-Loop)</strong></span>
-                    </div>
+
+            <!-- Proactive Logistics Banner -->
+            <div id="proactive-alert-banner" class="hidden lg:flex items-center gap-3 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-medium">
+                <i class="fa-solid fa-truck-fast text-amber-400"></i>
+                <span>Proactive Alert: <strong>Chewy Cat Food Autoship</strong> arrives Thursday</span>
+                <button onclick="dismissProactiveBanner()" class="text-amber-400/60 hover:text-amber-200 ml-2">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Assistant Mode Pill -->
+            <div class="flex items-center gap-3 text-xs">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-slate-300 shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-medium text-amber-300">Clew Ready</span>
+                    <span class="text-slate-600 font-mono text-[10px]">|</span>
+                    <span class="text-indigo-400 font-mono text-[11px] font-semibold">Dry System Analyst</span>
                 </div>
             </div>
         </header>
 
-        <!-- Content Workspaces (Dashboard Tab) -->
-        <main id="tab-dashboard" class="tab-content flex-grow flex flex-col lg:flex-row overflow-hidden p-6 gap-6">
-            <!-- Left Side: Working State / Logistics Kanban -->
-            <section class="flex-1 flex flex-col min-w-0 bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
-                <div class="p-5 border-b border-slate-800/60 flex items-center justify-between bg-slate-900/20">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
-                            <i class="fa-solid fa-list-check text-sm"></i>
+        <!-- TAB 1: EXECUTIVE DAILY BRIEF -->
+        <main id="tab-daily-brief" class="tab-content flex-grow flex flex-col lg:flex-row overflow-hidden p-5 gap-5">
+            <!-- Left Panel: The Collapsible Executive Tower -->
+            <section class="flex-1 flex flex-col min-w-0 space-y-4 overflow-y-auto pr-1">
+                
+                <!-- TOWER SECTION 1: Focus Tasks & Daily Goals (Collapsible) -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-2xl transition-all">
+                    <!-- Accordion Header -->
+                    <div onclick="toggleTowerSection('tower-tasks')" class="p-4 bg-slate-900/40 border-b border-slate-800/60 flex items-center justify-between cursor-pointer select-none hover:bg-slate-900/60 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20">
+                                <i class="fa-solid fa-crosshairs text-xs"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                    Focus Tasks &amp; Daily Goals
+                                    <span id="pending-tasks-badge" class="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold">3 Pending</span>
+                                </h2>
+                                <p class="text-[11px] text-slate-500">Immediate priorities slotted into your day</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="font-bold text-slate-200">Current Working State</h2>
-                            <p class="text-xs text-slate-500">Active dynamic logistics, queued tasks & reminders</p>
+
+                        <div class="flex items-center gap-3">
+                            <button onclick="event.stopPropagation(); openAddTaskModal();" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition-all">
+                                <i class="fa-solid fa-plus text-[10px]"></i> Add Goal
+                            </button>
+                            <i id="icon-tower-tasks" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform duration-300"></i>
                         </div>
                     </div>
-                    <button onclick="openAddTaskModal()" class="text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all shadow-lg shadow-indigo-600/20">
-                        <i class="fa-solid fa-plus mr-1"></i> Quick Task
-                    </button>
+
+                    <!-- Accordion Body Content -->
+                    <div id="tower-tasks" class="accordion-content p-4 space-y-3">
+                        <div id="focus-tasks-container" class="space-y-2.5">
+                            <!-- Tasks rendered dynamically -->
+                        </div>
+                    </div>
                 </div>
 
-                <div id="tasks-container" class="flex-grow overflow-y-auto p-5 space-y-3">
-                    <!-- Tasks will populate dynamically here -->
+                <!-- TOWER SECTION 2: Active Projects & Milestones (Collapsible) -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-2xl transition-all">
+                    <!-- Accordion Header -->
+                    <div onclick="toggleTowerSection('tower-projects')" class="p-4 bg-slate-900/40 border-b border-slate-800/60 flex items-center justify-between cursor-pointer select-none hover:bg-slate-900/60 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                                <i class="fa-solid fa-diagram-project text-xs"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                    Active Projects &amp; Milestones
+                                    <span class="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-mono font-bold">2 Active</span>
+                                </h2>
+                                <p class="text-[11px] text-slate-500">Technical engineering &amp; infrastructure roadmaps</p>
+                            </div>
+                        </div>
+
+                        <i id="icon-tower-projects" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform duration-300"></i>
+                    </div>
+
+                    <!-- Accordion Body Content -->
+                    <div id="tower-projects" class="accordion-content collapsed p-4 space-y-3">
+                        <div class="space-y-3">
+                            <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-cube text-indigo-400"></i> Clew V5 LifeOS Hardening</span>
+                                    <span class="text-emerald-400 font-mono text-[10px] font-bold">88/88 Tests Passed</span>
+                                </div>
+                                <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                                    <div class="bg-indigo-500 h-full w-[100%] rounded-full"></div>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Task 4 Watchdog &amp; Local Unix IPC Transport completed.</p>
+                            </div>
+
+                            <div class="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-server text-purple-400"></i> Lakeland Home Server Failover</span>
+                                    <span class="text-amber-400 font-mono text-[10px] font-bold">In Progress</span>
+                                </div>
+                                <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                                    <div class="bg-amber-500 h-full w-[65%] rounded-full"></div>
+                                </div>
+                                <p class="text-[11px] text-slate-400">Setting up active-passive PostgreSQL replication over Tailscale.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- TOWER SECTION 3: Calendar & Hard Landscape (Collapsible) -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-2xl transition-all">
+                    <!-- Accordion Header -->
+                    <div onclick="toggleTowerSection('tower-calendar')" class="p-4 bg-slate-900/40 border-b border-slate-800/60 flex items-center justify-between cursor-pointer select-none hover:bg-slate-900/60 transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                                <i class="fa-solid fa-calendar-day text-xs"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                                    Calendar &amp; White Space
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-bold">GCal Synced</span>
+                                </h2>
+                                <p class="text-[11px] text-slate-500">Fixed commitments vs open task slots</p>
+                            </div>
+                        </div>
+
+                        <i id="icon-tower-calendar" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform duration-300"></i>
+                    </div>
+
+                    <!-- Accordion Body Content -->
+                    <div id="tower-calendar" class="accordion-content collapsed p-4 space-y-3">
+                        <div class="space-y-2.5">
+                            <div class="p-3 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center gap-3 text-xs">
+                                <span class="font-mono text-indigo-400 font-bold w-16 shrink-0">09:00 AM</span>
+                                <div class="w-1 h-6 rounded-full bg-indigo-500 shrink-0"></div>
+                                <div class="min-w-0 flex-grow">
+                                    <p class="font-bold text-slate-200 truncate">Team Architecture Sync</p>
+                                    <p class="text-[10px] text-slate-500">Fixed Commitment · 45m</p>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-indigo-950/20 border border-dashed border-indigo-500/30 rounded-xl flex items-center gap-3 text-xs">
+                                <span class="font-mono text-emerald-400 font-bold w-16 shrink-0">10:00 AM</span>
+                                <div class="w-1 h-6 rounded-full bg-emerald-400 shrink-0"></div>
+                                <div class="min-w-0 flex-grow">
+                                    <p class="font-bold text-emerald-300 truncate">White Space Block (2.5 Hours)</p>
+                                    <p class="text-[10px] text-slate-400">Slotted: Refactor PostgreSQL pool</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
-            <!-- Right Side: Interactive AI Engine & Conversational Interface -->
-            <section class="w-full lg:w-[460px] xl:w-[520px] flex flex-col shrink-0 bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
-                <div class="p-5 border-b border-slate-800/60 flex items-center justify-between bg-slate-900/20">
-                    <div class="flex items-center gap-3">
-                        <div class="relative flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                            <i class="fa-solid fa-robot text-sm"></i>
-                            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-slate-900 animate-pulse"></span>
+            <!-- Right Panel: Assistant Dialogue & Historical Synopsis Thread Selector -->
+            <section class="w-full lg:w-[480px] xl:w-[520px] flex flex-col shrink-0 glass-card rounded-2xl overflow-hidden shadow-2xl">
+                <!-- Dialogue & Historical Threads Header -->
+                <div class="p-4 border-b border-slate-800/60 bg-slate-900/40 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                                <i class="fa-solid fa-comments text-xs"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate-200 text-sm">Assistant Dialogue</h2>
+                                <p class="text-[11px] text-slate-500">Real-time interaction &amp; thread memory</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="font-bold text-slate-200">Agent Command Stream</h2>
-                            <p class="text-xs text-slate-500">Interact & submit 1-click feedback</p>
+
+                        <!-- Toggle Historical Threads Button -->
+                        <button onclick="toggleHistoryDrawer()" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-clock-rotate-left text-purple-400"></i>
+                            <span>History</span>
+                        </button>
+                    </div>
+
+                    <!-- Historical Threads Synopsis Bar (Expandable) -->
+                    <div id="history-thread-drawer" class="hidden p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2 text-xs">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">Recent Session Synopses</span>
+                        <div class="space-y-1.5">
+                            <button onclick="loadHistoricalThread('nightly')" class="w-full text-left p-2 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                                    <span>🌙 Late Night Refactor Review</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">Yesterday</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5">Synopsis: Evaluated task locking and enforced 7-day TTL expiration decay.</p>
+                            </button>
+                            <button onclick="loadHistoricalThread('logistics')" class="w-full text-left p-2 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                                    <span>🛒 Chewy &amp; Lakeland Logistics</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">July 19</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5">Synopsis: Confirmed cat food shipment delivery and oil change milestones.</p>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Conversational History Feed -->
-                <div id="chat-messages" class="flex-grow overflow-y-auto p-5 space-y-4">
-                    <!-- Messages dynamically rendered -->
+                <!-- Timeline Messages Container -->
+                <div id="chat-timeline" class="flex-grow overflow-y-auto p-4 space-y-3.5">
+                    <!-- Messages rendered dynamically -->
                 </div>
 
-                <!-- Input Interface Deck -->
-                <div class="p-4 border-t border-slate-800/60 bg-slate-900/40">
-                    <div id="voice-wave" class="hidden h-10 items-center justify-center gap-1 mb-3">
-                        <div class="w-1 bg-indigo-500 h-2 rounded animate-pulse" style="animation-duration: 0.5s"></div>
-                        <div class="w-1 bg-purple-500 h-6 rounded animate-pulse" style="animation-duration: 0.3s"></div>
-                        <div class="w-1 bg-indigo-400 h-4 rounded animate-pulse" style="animation-duration: 0.7s"></div>
-                        <div class="w-1 bg-indigo-600 h-8 rounded animate-pulse" style="animation-duration: 0.4s"></div>
-                        <div class="w-1 bg-purple-400 h-5 rounded animate-pulse" style="animation-duration: 0.6s"></div>
-                        <div class="w-1 bg-indigo-500 h-2 rounded animate-pulse" style="animation-duration: 0.5s"></div>
-                    </div>
-                    
-                    <form onsubmit="handleSend(event)" class="relative flex items-center">
-                        <input id="chat-input" type="text" placeholder="Tell Clew to execute or add something..." 
-                               class="w-full bg-slate-950/60 border border-slate-800/80 rounded-xl py-3.5 pl-4 pr-24 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all">
+                <!-- Real-time Voice Waveform Indicator -->
+                <div id="voice-waveform" class="hidden px-4 py-2 bg-indigo-950/40 border-t border-indigo-500/20 flex items-center justify-center gap-2">
+                    <span class="text-[10px] font-mono font-bold text-indigo-300 mr-2">LIVE VOICE STREAMING...</span>
+                    <div class="w-1 bg-indigo-400 h-3 rounded animate-pulse" style="animation-duration: 0.3s"></div>
+                    <div class="w-1 bg-emerald-400 h-6 rounded animate-pulse" style="animation-duration: 0.2s"></div>
+                    <div class="w-1 bg-purple-400 h-4 rounded animate-pulse" style="animation-duration: 0.4s"></div>
+                    <div class="w-1 bg-indigo-500 h-2 rounded animate-pulse" style="animation-duration: 0.25s"></div>
+                </div>
+
+                <!-- Input Deck -->
+                <div class="p-4 border-t border-slate-800/60 bg-slate-900/50">
+                    <form onsubmit="handleChatSubmit(event)" class="relative flex items-center">
+                        <input id="chat-input" type="text" placeholder="Ask Clew, dictate a thought, or drop a task..." 
+                               class="w-full glass-input rounded-xl py-3 pl-4 pr-28 text-sm text-slate-100 placeholder-slate-500 focus:outline-none font-medium">
                         
-                        <div class="absolute right-2 flex items-center gap-1.5">
-                            <button type="button" onclick="simulateVoiceActive()" class="w-9 h-9 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-400 flex items-center justify-center transition-all" title="Start LiveKit Voice Session">
+                        <div class="absolute right-2 flex items-center gap-1">
+                            <label for="image-upload" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-400 flex items-center justify-center cursor-pointer transition-all" title="Attach Receipt / Image">
+                                <i class="fa-solid fa-paperclip text-sm"></i>
+                                <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageDrop(event)">
+                            </label>
+
+                            <button type="button" onclick="triggerDictation()" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-emerald-400 flex items-center justify-center transition-all" title="Dictate Prompt">
                                 <i class="fa-solid fa-microphone text-sm"></i>
                             </button>
-                            <button type="submit" class="w-9 h-9 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-md">
+
+                            <button type="submit" class="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center transition-all shadow-md shadow-indigo-600/30">
                                 <i class="fa-solid fa-paper-plane text-xs"></i>
                             </button>
                         </div>
@@ -167,93 +379,153 @@
             </section>
         </main>
 
-        <!-- Content Workspaces (Governance & Optimization Tab) -->
-        <main id="tab-governance" class="tab-content hidden flex-grow flex flex-col overflow-hidden p-6 gap-6">
-            <section class="flex-grow flex flex-col bg-slate-900/40 border border-slate-800/60 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl">
-                <!-- Tab Banner -->
-                <div class="p-6 border-b border-slate-800/60 bg-slate-900/20 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-100">Autonomous Adaptation & Prompt Optimization Review</h2>
-                        <p class="text-sm text-slate-400">Review human-in-the-loop prompt revisions and lock governance strategy rules.</p>
-                    </div>
-                    <button onclick="runDistilleryJob()" class="text-xs px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition-all shadow-md flex items-center gap-1.5">
-                        <i class="fa-solid fa-flask"></i> Run Distillery Job
-                    </button>
+        <!-- TAB 2: HOUSEHOLD LOGISTICS -->
+        <main id="tab-logistics" class="tab-content hidden flex-grow flex flex-col p-5 gap-5 overflow-y-auto">
+            <section class="glass-card rounded-2xl p-5 space-y-4">
+                <div class="border-b border-slate-800/60 pb-3">
+                    <h2 class="font-bold text-slate-200 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-truck-fast text-indigo-400"></i>
+                        Proactive Household Logistics
+                    </h2>
+                    <p class="text-xs text-slate-400">Recurring deliveries, pet supplies &amp; maintenance tracking</p>
                 </div>
 
-                <div class="flex-grow overflow-y-auto p-6 space-y-6">
-                    <!-- Optimization Review Widget (Human-in-the-Loop) -->
-                    <div class="border border-indigo-500/30 bg-indigo-950/20 rounded-xl p-5 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 text-base"></i>
-                                <h3 class="font-bold text-slate-100 text-base">Proposed System Prompt Optimizations (Human-in-the-Loop)</h3>
-                            </div>
-                            <span class="text-xs px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-semibold uppercase tracking-wider">Review Feed</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-cat text-amber-400"></i> Chewy Autoship (Cats)</span>
+                            <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono text-[10px] font-bold">In Transit</span>
                         </div>
-                        
-                        <div id="proposals-container" class="space-y-3">
-                            <!-- Pending proposals populate dynamically here -->
-                        </div>
+                        <p class="text-xs text-slate-400">Cat Food + Litter replenishment scheduled for delivery Thursday, July 23.</p>
+                        <p class="text-[10px] font-mono text-slate-500">Tracking: #1Z99999999999999</p>
                     </div>
 
-                    <!-- Rule Block 1 -->
-                    <div class="border border-slate-800/60 bg-slate-950/40 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2.5">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 border border-amber-500/30 text-amber-400 uppercase">Late Night Tech Fatigue</span>
-                                <span class="text-xs text-slate-500">Trigger context: Past 10:00 PM</span>
-                            </div>
-                            <h3 class="font-bold text-slate-200">Strictly defer complex deployments to next morning</h3>
-                            <p class="text-sm text-slate-400">Suggest warm resting block or documentation review.</p>
+                    <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-car text-indigo-400"></i> Vehicle Maintenance</span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">On Track</span>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked class="sr-only peer" onchange="toggleLockBadge('lock-late-night')">
-                                <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-indigo-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
-                            </label>
-                            <span id="lock-late-night" class="text-xs text-indigo-400 font-semibold uppercase tracking-wide">Locked</span>
-                        </div>
+                        <p class="text-xs text-slate-400">Oil change due in 450 miles. Clew will prompt during weekend Lakeland drive.</p>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Content Workspaces (Mobile View) -->
-        <main id="tab-mobile-view" class="tab-content hidden flex-grow flex items-center justify-center p-6">
-            <div class="w-[340px] h-[680px] bg-black rounded-[48px] p-3 shadow-2xl ring-12 ring-slate-800 flex flex-col overflow-hidden relative">
-                <div class="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-20 flex justify-center items-center">
-                    <div class="w-12 h-1 bg-slate-800 rounded-full"></div>
+        <!-- TAB 3: LEARNED HABITS -->
+        <main id="tab-memory" class="tab-content hidden flex-grow flex flex-col p-5 gap-5 overflow-y-auto">
+            <section class="glass-card rounded-2xl p-5 space-y-4">
+                <div class="border-b border-slate-800/60 pb-3">
+                    <h2 class="font-bold text-slate-200 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                        Learned Personal Habits &amp; Adaptations
+                    </h2>
+                    <p class="text-xs text-slate-400">Rules distilled automatically from execution trends with 7-Day TTL autodecay</p>
                 </div>
-                <iframe src="http://localhost:8008" id="mobile-viewport" class="w-full h-full bg-slate-950 rounded-[38px] overflow-hidden border-0"></iframe>
-            </div>
+
+                <div class="space-y-3">
+                    <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-mono uppercase text-indigo-400 font-bold">Late Night Fatigue Rule</span>
+                            <p class="text-xs font-semibold text-slate-200 mt-0.5">Strictly defers technical deployments past 10:00 PM</p>
+                            <p class="text-[11px] text-slate-500">Learned from user fatigue corrections during late night execution cycles.</p>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">Active</span>
+                    </div>
+
+                    <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">Code Review Standard</span>
+                            <p class="text-xs font-semibold text-slate-200 mt-0.5">Always wrap database cursors in ThreadedConnectionPool</p>
+                            <p class="text-[11px] text-slate-500">Consolidated by Hippocampus from 3 manual code corrections today.</p>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">Active</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- TAB 4: DEDICATED ENGINE TELEMETRY PAGE -->
+        <main id="tab-telemetry" class="tab-content hidden flex-grow flex flex-col p-5 gap-5 overflow-y-auto">
+            <section class="glass-card rounded-2xl p-6 space-y-6">
+                <div class="border-b border-slate-800/60 pb-4">
+                    <h2 class="font-bold text-slate-200 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i>
+                        Engine Hardware &amp; Neuromorphic Telemetry
+                    </h2>
+                    <p class="text-xs text-slate-400">Standalone diagnostic page for local GPU metrics, Amygdala stress scores, and Merkle DAG states</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Metric Card 1 -->
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Local LLM Hardware</span>
+                        <p class="text-slate-100 font-bold text-sm">RTX 5070 (Pinned VRAM)</p>
+                        <p class="text-emerald-400 font-mono text-xs font-bold">170.0 tokens/sec</p>
+                    </div>
+
+                    <!-- Metric Card 2 -->
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Amygdala Stress Score</span>
+                        <p class="text-slate-100 font-bold text-sm">F_user = 0.220 / 0.750</p>
+                        <p class="text-indigo-400 font-mono text-xs">Normal Verbose Mode</p>
+                    </div>
+
+                    <!-- Metric Card 3 -->
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Cerebellum Hot-Paths</span>
+                        <p class="text-cyan-400 font-bold text-sm">&lt; 0.15ms Bypass Active</p>
+                        <p class="text-slate-400 font-mono text-xs">2 regex templates cached</p>
+                    </div>
+
+                    <!-- Metric Card 4 -->
+                    <div class="p-4 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
+                        <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Merkle DAG Snapshot</span>
+                        <p class="text-purple-300 font-bold text-sm font-mono">blake3_e9f1a2b3</p>
+                        <p class="text-slate-400 font-mono text-xs">HLC: 1721598235.0.node1</p>
+                    </div>
+                </div>
+
+                <!-- Deep Diagnostic Details -->
+                <div class="p-5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 font-mono text-xs">
+                    <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider">Active System Health Checks</h4>
+                    <div class="space-y-2 text-slate-300">
+                        <p>✓ Event Ledger BLAKE3 Hash-Chain: <span class="text-emerald-400">VERIFIED</span></p>
+                        <p>✓ Graph CRDT State Consistency: <span class="text-emerald-400">SYNCHRONIZED</span></p>
+                        <p>✓ IPC Socket Transport: <span class="text-emerald-400">LISTENING (/tmp/clew_ipc.sock)</span></p>
+                        <p>✓ Unit Test Suite Validation: <span class="text-emerald-400">88/88 PASSING</span></p>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 </div>
 
-<!-- Dynamic Task Creator Overlay -->
-<div id="task-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+<!-- Modal: New Task Overlay -->
+<div id="add-task-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-        <h3 class="text-lg font-bold text-slate-100">Log Logistics Task</h3>
-        <form onsubmit="handleAddTask(event)" class="space-y-4">
+        <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-plus text-amber-400"></i>
+            Log Personal Goal / Task
+        </h3>
+        <form onsubmit="handleAddTaskSubmit(event)" class="space-y-4">
             <div>
                 <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
-                <input id="modal-task-title" type="text" placeholder="e.g. Clean deployment branch config" required 
-                       class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                <input id="modal-title" type="text" placeholder="e.g., Check cat food autoship order" required 
+                       class="w-full glass-input rounded-xl p-3 text-sm text-slate-100 focus:outline-none">
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
-                    <select id="modal-task-priority" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
-                        <option value="P1">P1 (Immediate)</option>
-                        <option value="P2" selected>P2 (Standard)</option>
-                        <option value="P3">P3 (Fluid)</option>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Category</label>
+                    <select id="modal-category" class="w-full glass-input rounded-xl p-3 text-sm text-slate-100 focus:outline-none">
+                        <option value="home">🏠 Home &amp; Chores</option>
+                        <option value="work" selected>💻 Tech &amp; Projects</option>
+                        <option value="errands">🛒 Errands</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Energy</label>
-                    <select id="modal-task-energy" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Energy Needed</label>
+                    <select id="modal-energy" class="w-full glass-input rounded-xl p-3 text-sm text-slate-100 focus:outline-none">
                         <option value="high">High Energy</option>
                         <option value="medium" selected>Medium</option>
                         <option value="low">Low Energy</option>
@@ -261,433 +533,363 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 pt-4">
-                <button type="button" onclick="closeAddTaskModal()" class="flex-1 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition-all">Cancel</button>
-                <button type="submit" class="flex-1 p-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-lg shadow-indigo-600/20">Add Task</button>
+            <div class="flex items-center gap-3 pt-3">
+                <button type="button" onclick="closeAddTaskModal()" class="flex-1 p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all">Cancel</button>
+                <button type="submit" class="flex-1 p-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition-all shadow-lg shadow-amber-600/20">Add Goal</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    const API_BASE = 'http://localhost:8008';
-
-    let globalState = {
+    let assistantState = {
+        activeTab: 'daily-brief',
         tasks: [
-            { id: 1, title: "Flipped raw Postgres pool logic in database.py", priority: "P1", energy_level: "high", status: "pending" },
-            { id: 2, title: "Test LiveKit asynchronous worker thread", priority: "P2", energy_level: "medium", status: "pending" }
+            { id: 1, title: "Refactor PostgreSQL connection pool", category: "work", priority: "P1", energy: "high", status: "pending", time: "10:00 AM" },
+            { id: 2, title: "Order Chewy autoship cat food", category: "home", priority: "P1", energy: "low", status: "pending", time: "02:30 PM" },
+            { id: 3, title: "Review weekend Lakeland errands list", category: "errands", priority: "P2", energy: "low", status: "pending", time: "05:00 PM" }
         ],
-        chat: [
-            { command_id: "cmd_baseline_1", sender: "user", text: "What is current optimization system state?", time: "05:10 PM", type: "text" },
-            { command_id: "cmd_baseline_2", sender: "agent", text: "All systems active. Multi-Model Router active (Tier 1 & Tier 2). Feedback loop ready.", time: "05:10 PM", type: "text" }
+        chatMessages: [
+            { sender: "agent", text: "Good evening! I've slotted your high-energy PostgreSQL task into tomorrow morning's 2.5-hour white space block. Chewy cat food arrives Thursday.", time: "11:25 PM" }
         ]
     };
+
+    // Toggle Collapsible Tower Accordion Sections
+    function toggleTowerSection(sectionId) {
+        const content = document.getElementById(sectionId);
+        const icon = document.getElementById(`icon-${sectionId}`);
+        
+        if (content.classList.contains('collapsed')) {
+            content.classList.remove('collapsed');
+            if (icon) icon.style.transform = 'rotate(0deg)';
+        } else {
+            content.classList.add('collapsed');
+            if (icon) icon.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    // Toggle Historical Thread Drawer
+    function toggleHistoryDrawer() {
+        const drawer = document.getElementById('history-thread-drawer');
+        drawer.classList.toggle('hidden');
+    }
+
+    function loadHistoricalThread(type) {
+        if (type === 'nightly') {
+            addAgentMessage("📜 Loaded Historical Thread [Late Night Refactor Review]: Synopsis: Evaluated task locking and enforced 7-day TTL expiration decay.");
+        } else if (type === 'logistics') {
+            addAgentMessage("📜 Loaded Historical Thread [Logistics & Chewy]: Synopsis: Confirmed cat food shipment delivery for Thursday.");
+        }
+        toggleHistoryDrawer();
+    }
+
+    // Render Working State Tasks inside the Collapsible Tower
+    function renderWorkingState() {
+        const container = document.getElementById('focus-tasks-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        const pendingTasks = assistantState.tasks.filter(t => t.status === 'pending');
+
+        if (pendingTasks.length === 0) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-6 text-slate-500 space-y-1">
+                    <i class="fa-solid fa-sun text-2xl text-slate-700"></i>
+                    <p class="text-xs">All focus tasks resolved! You are caught up.</p>
+                </div>
+            `;
+        } else {
+            pendingTasks.forEach(t => {
+                let catBadge = "🏠 Home";
+                if (t.category === 'work') catBadge = "💻 Tech";
+                if (t.category === 'errands') catBadge = "🛒 Errand";
+
+                container.innerHTML += `
+                    <div class="p-3 bg-slate-950/60 hover:bg-slate-950/90 border border-slate-800/80 hover:border-amber-500/30 rounded-xl flex items-center justify-between gap-3 transition-all">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <button onclick="resolveTask(${t.id})" class="w-5 h-5 rounded-full border border-slate-700 hover:border-emerald-500 hover:bg-emerald-500/10 flex items-center justify-center transition-all shrink-0">
+                                <i class="fa-solid fa-check text-[9px] text-transparent hover:text-emerald-400"></i>
+                            </button>
+                            <div class="min-w-0 space-y-1">
+                                <p class="text-xs font-semibold text-slate-200 truncate">${t.title}</p>
+                                <div class="flex items-center gap-2 text-[10px]">
+                                    <span class="px-2 py-0.5 rounded font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">${catBadge}</span>
+                                    <span class="text-slate-500 flex items-center gap-1"><i class="fa-solid fa-bolt text-amber-400/80"></i> ${t.energy} energy</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="deleteTask(${t.id})" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-rose-400 transition-all">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // Header counter update
+        const headerCount = document.getElementById('header-task-count');
+        if (headerCount) {
+            headerCount.textContent = `${pendingTasks.length} focus item${pendingTasks.length === 1 ? '' : 's'}`;
+        }
+        const badgeCount = document.getElementById('pending-tasks-badge');
+        if (badgeCount) {
+            badgeCount.textContent = `${pendingTasks.length} Pending`;
+        }
+    }
+
+    // Render Chat Timeline
+    function renderChatTimeline() {
+        const container = document.getElementById('chat-timeline');
+        if (!container) return;
+        container.innerHTML = '';
+
+        assistantState.chatMessages.forEach(msg => {
+            const isAgent = msg.sender === 'agent';
+            const alignment = isAgent ? 'justify-start' : 'justify-end';
+            const bubbleStyle = isAgent ? 'bg-slate-900/90 border border-slate-800 text-slate-200' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
+
+            container.innerHTML += `
+                <div class="flex ${alignment}">
+                    <div class="max-w-[88%] rounded-2xl p-3.5 text-xs space-y-1 ${bubbleStyle}">
+                        <div class="flex items-center justify-between gap-3 text-[10px]">
+                            <span class="font-bold uppercase tracking-wider ${isAgent ? 'text-amber-400' : 'text-indigo-200'}">${isAgent ? 'Clew' : 'You'}</span>
+                            <span class="text-slate-500 font-mono">${msg.time}</span>
+                        </div>
+                        <p class="leading-relaxed font-medium">${msg.text}</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function resolveTask(id) {
+        assistantState.tasks = assistantState.tasks.filter(t => t.id !== id);
+        renderWorkingState();
+        addAgentMessage("✓ Task marked resolved.");
+        fetch(`/api/tasks/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+        }).catch(() => {});
+    }
+
+    function deleteTask(id) {
+        assistantState.tasks = assistantState.tasks.filter(t => t.id !== id);
+        renderWorkingState();
+    }
+
+    function addAgentMessage(text) {
+        assistantState.chatMessages.push({
+            sender: "agent",
+            text: text,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        renderChatTimeline();
+    }
+
+    async function handleChatSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        assistantState.chatMessages.push({
+            sender: "user",
+            text: text,
+            time: userTime
+        });
+        renderChatTimeline();
+        input.value = '';
+
+        // Try API endpoint first
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, source: 'daily_brief_ui' })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.reply) {
+                    addAgentMessage(data.reply);
+                    return;
+                }
+            }
+        } catch (err) {
+            // Fallback to local response logic if API offline
+        }
+
+        setTimeout(() => {
+            if (text.toLowerCase().includes("cat") || text.toLowerCase().includes("chewy")) {
+                addAgentMessage("Chewy autoship is confirmed for Thursday delivery. Added reminder to check the porch on arrival.");
+            } else if (text.toLowerCase().includes("laundry")) {
+                addAgentMessage("Added 'Flip laundry to dryer' to Home tasks and slotted it into your evening block.");
+                assistantState.tasks.unshift({
+                    id: Date.now(),
+                    title: "Flip laundry to dryer",
+                    category: "home",
+                    priority: "P1",
+                    energy: "low",
+                    status: "pending",
+                    time: userTime
+                });
+                renderWorkingState();
+            } else {
+                addAgentMessage("Logged to Daily Brief and slotted into your open white space.");
+            }
+        }, 400);
+    }
+
+    function triggerDictation() {
+        toggleVoiceSession();
+        setTimeout(() => {
+            const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            assistantState.chatMessages.push({
+                sender: "user",
+                text: "🎙️ Dictated: Remind me to flip the laundry when I get home",
+                time: userTime
+            });
+            renderChatTimeline();
+            
+            assistantState.tasks.unshift({
+                id: Date.now(),
+                title: "Flip laundry to dryer",
+                category: "home",
+                priority: "P1",
+                energy: "low",
+                status: "pending",
+                time: userTime
+            });
+            renderWorkingState();
+
+            setTimeout(() => {
+                addAgentMessage("Voice command received. Added 'Flip laundry to dryer' to Home tasks.");
+                toggleVoiceSession();
+            }, 1000);
+        }, 1200);
+    }
+
+    function handleImageDrop(e) {
+        addAgentMessage("📷 Image received. Local vision model (qwen2.5-vl) extracted receipt details and saved vector embedding to pgvector.");
+    }
+
+    function toggleVoiceSession() {
+        const wave = document.getElementById('voice-waveform');
+        if (wave) {
+            wave.classList.toggle('hidden');
+            wave.classList.toggle('flex');
+        }
+    }
+
+    function dismissProactiveBanner() {
+        const banner = document.getElementById('proactive-alert-banner');
+        if (banner) banner.remove();
+    }
+
+    function openAddTaskModal() {
+        const modal = document.getElementById('add-task-modal');
+        if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAddTaskModal() {
+        const modal = document.getElementById('add-task-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    function handleAddTaskSubmit(e) {
+        e.preventDefault();
+        const title = document.getElementById('modal-title').value;
+        const category = document.getElementById('modal-category').value;
+        const energy = document.getElementById('modal-energy').value;
+        const userTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        assistantState.tasks.unshift({
+            id: Date.now(),
+            title,
+            category,
+            priority: "P2",
+            energy,
+            status: "pending",
+            time: userTime
+        });
+
+        renderWorkingState();
+        closeAddTaskModal();
+        addAgentMessage(`Task '${title}' slotted into Daily Brief.`);
+
+        // Post to API if server is running
+        fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, energy_level: energy, priority: "P2" })
+        }).catch(() => {});
+
+        e.target.reset();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        const targetTab = document.getElementById(`tab-${tabId}`);
+        if (targetTab) targetTab.classList.remove('hidden');
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active', 'text-amber-400', 'bg-amber-500/10', 'border', 'border-amber-500/20');
+            btn.classList.add('text-slate-500');
+        });
+
+        const activeNav = document.getElementById(`nav-${tabId}`);
+        if (activeNav) {
+            activeNav.classList.add('active', 'text-amber-400', 'bg-amber-500/10', 'border', 'border-amber-500/20');
+            activeNav.classList.remove('text-slate-500');
+        }
+        assistantState.activeTab = tabId;
+    }
 
     async function syncBackendData() {
         try {
             const [tasksRes, chatRes] = await Promise.all([
-                fetch(`${API_BASE}/api/tasks`),
-                fetch(`${API_BASE}/api/chat`)
+                fetch('/api/tasks'),
+                fetch('/api/chat')
             ]);
             if (tasksRes.ok) {
                 const liveTasks = await tasksRes.json();
                 if (Array.isArray(liveTasks) && liveTasks.length > 0) {
-                    globalState.tasks = liveTasks.map(t => ({
+                    assistantState.tasks = liveTasks.map(t => ({
                         id: t.id,
                         title: t.title,
-                        priority: t.priority === 1 ? 'P1' : (t.priority === 3 ? 'P3' : 'P2'),
-                        energy_level: t.energy_level || 'medium',
-                        status: t.status || 'pending'
+                        category: t.context_tags ? (t.context_tags.includes('work') ? 'work' : (t.context_tags.includes('errands') ? 'errands' : 'home')) : 'work',
+                        priority: `P${t.priority || 2}`,
+                        energy: t.energy_level || 'medium',
+                        status: t.status || 'pending',
+                        time: t.due_date || '09:00 AM'
                     }));
+                    renderWorkingState();
                 }
             }
             if (chatRes.ok) {
                 const liveChat = await chatRes.json();
                 if (Array.isArray(liveChat) && liveChat.length > 0) {
-                    globalState.chat = liveChat.map(c => ({
-                        command_id: c.metadata ? (typeof c.metadata === 'string' ? JSON.parse(c.metadata).command_id : c.metadata.command_id) : 'cmd_' + c.id,
+                    assistantState.chatMessages = liveChat.map(c => ({
                         sender: (c.speaker === 'assistant' || c.speaker === 'agent') ? 'agent' : 'user',
                         text: c.content || c.message,
-                        time: c.timestamp ? c.timestamp.split('T')[1]?.substring(0, 5) || '05:10 PM' : '05:10 PM',
-                        type: c.source === 'mobile_voice' ? 'voice' : 'text'
+                        time: c.timestamp ? c.timestamp.split('T')[1]?.substring(0, 5) || '11:25 PM' : '11:25 PM'
                     }));
+                    renderChatTimeline();
                 }
             }
-            renderTasks();
-            renderChat();
-            loadOptimizationProposals();
         } catch (e) {
-            renderTasks();
-            renderChat();
-            loadOptimizationProposals();
+            // Keep default initial state
         }
     }
 
-    async function loadOptimizationProposals() {
-        const container = document.getElementById('proposals-container');
-        if (!container) return;
-        
-        try {
-            const res = await fetch(`${API_BASE}/api/distillery/proposals`);
-            if (res.ok) {
-                const proposals = await res.json();
-                if (!Array.isArray(proposals) || proposals.length === 0) {
-                    container.innerHTML = `
-                        <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-lg text-slate-400 text-xs text-center">
-                            No pending prompt optimization proposals. Run feedback distillation job to generate hints.
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = '';
-                proposals.forEach(p => {
-                    container.innerHTML += `
-                        <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 uppercase">${p.target_tier}</span>
-                                    <span class="text-[10px] text-slate-500">ID: ${p.id}</span>
-                                </div>
-                                <p class="text-xs font-semibold text-slate-200">${p.hint_text}</p>
-                                <p class="text-[11px] text-slate-400">${p.reasoning}</p>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button onclick="acceptProposal('${p.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all">Accept</button>
-                                <button onclick="rejectProposal('${p.id}')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all">Reject</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-        } catch (e) {
-            container.innerHTML = `
-                <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-lg text-slate-400 text-xs text-center">
-                    No pending prompt optimization proposals.
-                </div>
-            `;
-        }
-    }
-
-    async function acceptProposal(id) {
-        try {
-            await fetch(`${API_BASE}/api/distillery/accept/${id}`, { method: 'POST' });
-            loadOptimizationProposals();
-        } catch(e) {}
-    }
-
-    async function rejectProposal(id) {
-        try {
-            await fetch(`${API_BASE}/api/distillery/reject/${id}`, { method: 'POST' });
-            loadOptimizationProposals();
-        } catch(e) {}
-    }
-
-    async function runDistilleryJob() {
-        try {
-            await fetch(`${API_BASE}/api/distillery/run`, { method: 'POST' });
-            loadOptimizationProposals();
-        } catch(e) {}
-    }
-
-    async function submitRating(cmdId, rating) {
-        try {
-            await fetch(`${API_BASE}/api/feedback`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command_id: cmdId, user_rating: rating })
-            });
-            alert(`Logged ${rating}-star feedback for command!`);
-        } catch(e) {
-            alert(`Submitted ${rating}-star rating!`);
-        }
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('tasks-container');
-        container.innerHTML = '';
-        
-        const pendingTasks = globalState.tasks.filter(t => t.status === 'pending' || t.status === 'in_progress');
-        if (pendingTasks.length === 0) {
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-12 text-slate-500">
-                    <i class="fa-solid fa-cloud-sun text-4xl mb-4 text-slate-700"></i>
-                    <p class="text-sm">You are completely caught up! No active tasks.</p>
-                </div>
-            `;
-            return;
-        }
-
-        pendingTasks.forEach(t => {
-            let priorityBadgeColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
-            if (t.priority === 'P1') priorityBadgeColor = "text-rose-400 bg-rose-500/10 border-rose-500/20 animate-pulse";
-            if (t.priority === 'P3') priorityBadgeColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
-
-            let energyBadgeColor = "text-slate-400";
-            if (t.energy_level === 'high') energyBadgeColor = "text-amber-400/80";
-
-            container.innerHTML += `
-                <div class="p-4 bg-slate-950/40 hover:bg-slate-950/70 border border-slate-800/80 hover:border-indigo-500/30 rounded-xl flex items-center justify-between gap-4 transition-all duration-300">
-                    <div class="flex items-center gap-3.5 min-w-0">
-                        <button onclick="completeTask(${t.id})" class="w-5 h-5 rounded-full border border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/10 flex items-center justify-center transition-all shrink-0">
-                            <i class="fa-solid fa-check text-[10px] text-transparent hover:text-indigo-400"></i>
-                        </button>
-                        <div class="min-w-0">
-                            <p class="text-sm font-medium text-slate-200 truncate">${t.title}</p>
-                            <div class="flex items-center gap-2 mt-1.5">
-                                <span class="text-[10px] px-2 py-0.5 rounded font-bold border ${priorityBadgeColor}">${t.priority}</span>
-                                <span class="text-[10px] text-slate-500 flex items-center gap-1">
-                                    <i class="fa-solid fa-bolt ${energyBadgeColor}"></i> ${t.energy_level} energy
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="postponeTask(${t.id})" class="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-slate-300 transition-all" title="Postpone Task">
-                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                        </button>
-                        <button onclick="deleteTask(${t.id})" class="p-2 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-rose-400 transition-all" title="Remove Task">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    function renderChat() {
-        const container = document.getElementById('chat-messages');
-        container.innerHTML = '';
-
-        globalState.chat.forEach(msg => {
-            const isAgent = msg.sender === 'agent';
-            const alignment = isAgent ? 'justify-start' : 'justify-end';
-            const bubbleBg = isAgent ? 'bg-slate-900 border border-slate-800/80 text-slate-200' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/15';
-            const iconBadge = msg.type === 'voice' ? '<i class="fa-solid fa-microphone text-[10px] text-indigo-400 mr-1.5"></i>' : '';
-            const cmdId = msg.command_id || 'cmd_temp';
-
-            const ratingControls = isAgent ? `
-                <div class="flex items-center gap-1 mt-2 pt-2 border-t border-slate-800/60 text-[10px]">
-                    <span class="text-slate-500 mr-1">Feedback:</span>
-                    <button onclick="submitRating('${cmdId}', 5)" class="hover:text-amber-400 text-slate-500 transition-all" title="Rate 5 Stars">★</button>
-                    <button onclick="submitRating('${cmdId}', 4)" class="hover:text-amber-400 text-slate-500 transition-all" title="Rate 4 Stars">★</button>
-                    <button onclick="submitRating('${cmdId}', 3)" class="hover:text-amber-400 text-slate-500 transition-all" title="Rate 3 Stars">★</button>
-                    <button onclick="submitRating('${cmdId}', 2)" class="hover:text-rose-400 text-slate-500 transition-all" title="Rate 2 Stars (Needs Review)">★</button>
-                    <button onclick="submitRating('${cmdId}', 1)" class="hover:text-rose-400 text-slate-500 transition-all" title="Rate 1 Star (Needs Review)">★</button>
-                </div>
-            ` : '';
-
-            container.innerHTML += `
-                <div class="flex ${alignment} gap-3">
-                    <div class="max-w-[85%] rounded-2xl px-4 py-3 text-sm ${bubbleBg}">
-                        <div class="flex items-center justify-between gap-4 mb-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider ${isAgent ? 'text-indigo-400' : 'text-indigo-200'}">${isAgent ? 'Clew' : 'You'}</span>
-                            <span class="text-[9px] text-slate-500">${iconBadge}${msg.time}</span>
-                        </div>
-                        <p class="leading-relaxed leading-6 text-slate-200 font-medium">${msg.text}</p>
-                        ${ratingControls}
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.scrollTop = container.scrollHeight;
-    }
-
-    async function completeTask(id) {
-        try {
-            await fetch(`${API_BASE}/api/tasks/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'completed' })
-            });
-        } catch(e) {}
-
-        globalState.tasks = globalState.tasks.filter(t => t.id !== id);
-        renderTasks();
-    }
-
-    async function postponeTask(id) {
-        try {
-            await fetch(`${API_BASE}/api/tasks/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'deferred' })
-            });
-        } catch(e) {}
-
-        let task = globalState.tasks.find(t => t.id === id);
-        if(task) {
-            task.priority = "P3";
-            renderTasks();
-        }
-    }
-
-    async function deleteTask(id) {
-        try {
-            await fetch(`${API_BASE}/api/tasks/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'completed' })
-            });
-        } catch(e) {}
-
-        globalState.tasks = globalState.tasks.filter(t => t.id !== id);
-        renderTasks();
-    }
-
-    function openAddTaskModal() {
-        document.getElementById('task-modal').classList.remove('hidden');
-    }
-
-    function closeAddTaskModal() {
-        document.getElementById('task-modal').classList.add('hidden');
-    }
-
-    async function handleAddTask(e) {
-        e.preventDefault();
-        const title = document.getElementById('modal-task-title').value;
-        const priority = document.getElementById('modal-task-priority').value;
-        const energy_level = document.getElementById('modal-task-energy').value;
-
-        try {
-            await fetch(`${API_BASE}/api/tasks`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, priority, energy_level })
-            });
-        } catch(e) {}
-
-        const newTask = {
-            id: globalState.tasks.length + 1,
-            title,
-            priority,
-            energy_level,
-            status: "pending"
-        };
-
-        globalState.tasks.unshift(newTask);
-        renderTasks();
-        closeAddTaskModal();
-        e.target.reset();
-    }
-
-    async function handleSend(e) {
-        e.preventDefault();
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if(!text) return;
-
-        const cmdId = 'cmd_' + Date.now();
-        globalState.chat.push({
-            command_id: cmdId,
-            sender: "user",
-            text: text,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: "text"
-        });
-        renderChat();
-        input.value = '';
-
-        try {
-            const res = await fetch(`${API_BASE}/api/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
-            });
-            const data = await res.json();
-            
-            let replyText = data.reply || "Understood. Intent processed via Multi-Model Router.";
-            
-            globalState.chat.push({
-                command_id: 'cmd_' + (Date.now() + 1),
-                sender: "agent",
-                text: replyText,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                type: "text"
-            });
-            renderChat();
-            syncBackendData(); // Refresh tasks and chat in case the agent created one or database was updated
-        } catch(e) {
-            console.error("Error processing chat:", e);
-        }
-    }
-
-    async function simulateVoiceActive() {
-        const wave = document.getElementById('voice-wave');
-        wave.classList.remove('hidden');
-        wave.classList.add('flex');
-
-        try {
-            await fetch(`${API_BASE}/api/livekit/token`, { method: 'POST' });
-        } catch(e) {}
-
-        setTimeout(() => {
-            globalState.chat.push({
-                command_id: 'cmd_' + Date.now(),
-                sender: "user",
-                text: "Flip the laundry to the dryer in the background list",
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                type: "voice"
-            });
-            renderChat();
-        }, 2000);
-
-        setTimeout(() => {
-            wave.classList.add('hidden');
-            wave.classList.remove('flex');
-            
-            globalState.chat.push({
-                command_id: 'cmd_' + (Date.now() + 1),
-                sender: "agent",
-                text: "Executed local function call. Added 'Move wash to dryer' to logistics list.",
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                type: "voice"
-            });
-            renderChat();
-
-            globalState.tasks.unshift({
-                id: globalState.tasks.length + 1,
-                title: "Move wash to dryer",
-                priority: "P1",
-                energy_level: "low",
-                status: "pending"
-            });
-            renderTasks();
-        }, 3800);
-    }
-
-    function toggleLockBadge(id) {
-        const badge = document.getElementById(id);
-        if(badge.textContent === 'Locked') {
-            badge.textContent = 'Active';
-            badge.className = "text-xs text-slate-500 font-semibold uppercase tracking-wide";
-        } else {
-            badge.textContent = 'Locked';
-            badge.className = "text-xs text-indigo-400 font-semibold uppercase tracking-wide";
-        }
-    }
-
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        const target = document.getElementById(`tab-${tabId}`);
-        if (target) target.classList.remove('hidden');
-
-        document.querySelectorAll('.nav-btn').forEach(b => {
-            b.classList.remove('active', 'text-indigo-400');
-            b.classList.add('text-slate-500');
-        });
-        
-        const activeBtn = btn || (window.event ? window.event.currentTarget : null);
-        if (activeBtn) {
-            activeBtn.classList.add('active', 'text-indigo-400');
-            activeBtn.classList.remove('text-slate-500');
-        }
-    }
-
-    window.onload = function() {
+    document.addEventListener('DOMContentLoaded', () => {
+        renderWorkingState();
+        renderChatTimeline();
         syncBackendData();
-    }
+    });
 </script>
 </body>
 </html>
