@@ -57,3 +57,12 @@ brain/
 scratch/
 logs/
 *.log
+
+# Local Developer Notes, Lessons & Planning Docs
+.lessons/
+docs/
+SYLLABUS.md
+AI_Assistant_Architecture_Review.md
+proposed_optimizations.json
+active_optimizations.json
+

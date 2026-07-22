@@ -1,9 +1,0 @@
-{
-  "Tier 1 (Specialized Coder)": [],
-  "Tier 2 (Generalist LifeOS)": [
-    "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Do not auto-approve expenses over threshold without review",
-    "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-19] Avoid misclassification: Always use type annotations on function parameters",
-    "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-20] Avoid misclassification: Do not auto-approve expenses over threshold without review",
-    "[AUTO-OPTIMIZATION: Learned from feedback 2026-07-21] Avoid misclassification: Do not auto-approve expenses over threshold without review"
-  ]
-}

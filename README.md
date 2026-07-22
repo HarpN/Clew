@@ -45,7 +45,7 @@ Clew unifies real-time voice streaming, desktop command control, mobile web inte
 ### 1. Split-Brain Cognitive Architecture (`brain_orchestrator.py`, `broca_translator.py`)
 - **0ms Latency Fast-Path**: Bypasses LLM generation for high-frequency static greetings and status queries (`hello`, `status`, `wake up`).
 - **Broca's Area (Semantic Translator)**: Synthesizes responses based on grounded database execution, maintaining strict control flow and performing mathematical semantic divergence checks.
-- **Deterministic Pre-Flight Safety Veto (Option A)** (`constraint_guard.py`): Enforces system rules and financial/energy constraints *before* streaming token sockets open, preventing "stutter" UX failures.
+- **Deterministic Pre-Flight Safety Veto** (`constraint_guard.py`): Enforces system rules and financial/energy constraints *before* streaming token sockets open, preventing "stutter" UX failures.
 
 ### 2. Neuromorphic Subsystems (`neuromorphic_subsystems.py`, `personality_quadrant.py`)
 - **Amygdala Friction Engine**: Computes real-time user friction ($F_{user}$) from keystroke dynamics and message cadence. Automatically shunts system responses to **Terse Mode** when stress thresholds ($0.75$) are breached.
@@ -76,9 +76,6 @@ Clew unifies real-time voice streaming, desktop command control, mobile web inte
 ### 7. Sub-500ms WebRTC Voice Agent (`agent/agent.py`)
 - LiveKit Agents integration with OpenAI STT/TTS and Silero VAD.
 - Modulates TTS speed and pitch dynamically in response to Limbic quadrant coordinate shifts.
-
-### 8. Interactive Training Syllabus & Lessons (`SYLLABUS.md`, `.lessons/`)
-- Built-in interactive code reviews and lessons covering binary frame validation, compute tiering, CRDT ledgers, limbic quadrants, and IPC watchdogs.
 
 ---
 
@@ -137,9 +134,6 @@ Clew/
 ├── mobile/
 │   ├── mobile_app.jsx            # Mobile React component
 │   └── index.html                # Standalone responsive mobile web client
-├── SYLLABUS.md                   # Interactive LifeOS training course syllabus
-├── .lessons/                     # Interactive architectural lesson modules
-├── docs/                         # Implementation plans and architectural walkthroughs
 ├── tests/                        # Comprehensive pytest test suite (19 test files)
 ├── migrations/
 │   └── v2_postgres_migration.sql # PostgreSQL schema & pgvector HNSW index migration
@@ -213,31 +207,22 @@ docker-compose up --build
 
 ---
 
-## 🧪 Running Tests & Interactive Syllabus
+## 🧪 Automated Testing & System Verification
 
-### Running Automated Test Suite
-Clew includes 19 comprehensive unit test modules covering all cognitive, ledger, CRDT, and socket subsystems:
+Clew includes 19 comprehensive unit test modules covering cognitive reasoning, transaction ledgering, CRDT engines, acoustic voice modulation, and socket IPC:
 
 ```bash
+# Run full automated test suite
 pytest
 ```
 
-To run a specific test suite:
+To run individual component test suites:
 ```bash
 pytest tests/test_cognitive_brain.py
 pytest tests/test_ledger_crdt.py
 pytest tests/test_personality_quadrant.py
 pytest tests/test_watchdog_ipc.py
 ```
-
-### Interactive Architectural Lessons
-Dive into the engineering details using the interactive lessons:
-- [SYLLABUS.md](SYLLABUS.md): Course overview and module index.
-- [Lesson 1: Binary Frame Layout](.lessons/lesson_1_protocol_frames.md)
-- [Lesson 2: 3-Tier Compute & Heartbeat Orchestration](.lessons/lesson_2_compute_tiering_heartbeat.md)
-- [Lesson 3: Event Ledgering & Graph CRDTs](.lessons/lesson_3_crdt_ledger.md)
-- [Lesson 4: Limbic Personality Quadrants](.lessons/lesson_4_personality_quadrant.md)
-- [Lesson 5: Cross-Platform IPC & Watchdog Integrity](.lessons/lesson_5_ipc_watchdog.md)
 
 ---
 
