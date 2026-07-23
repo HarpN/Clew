@@ -1,6 +1,7 @@
 name: Clew
 options:
   bundleIdPrefix: com.clew
+  xcodeVersion: "15.4"
 targets:
   Clew:
     type: application
