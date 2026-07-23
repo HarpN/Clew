@@ -1,25 +1,18 @@
 import Foundation
+import GRDB
 
-enum TaskPriority: String, Codable, CaseIterable {
+public enum TaskPriority: String, Codable, CaseIterable, Sendable {
     case p1 = "P1"
     case p2 = "P2"
     case p3 = "P3"
-    
-    var colorName: String {
-        switch self {
-        case .p1: return "red"
-        case .p2: return "orange"
-        case .p3: return "blue"
-        }
-    }
 }
 
-enum EnergyLevel: String, Codable, CaseIterable {
+public enum EnergyLevel: String, Codable, CaseIterable, Sendable {
     case high = "high"
     case medium = "medium"
     case low = "low"
     
-    var iconName: String {
+    public var iconName: String {
         switch self {
         case .high: return "bolt.fill"
         case .medium: return "bolt.horizontal.fill"
@@ -28,97 +21,25 @@ enum EnergyLevel: String, Codable, CaseIterable {
     }
 }
 
-struct TaskItem: Identifiable, Codable {
-    let id: Int64
-    var title: String
-    var description: String?
-    var category: String
-    var priority: TaskPriority
-    var energyLevel: EnergyLevel
-    var status: String
-    var time: String
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case title
-        case description
-        case category
-        case priority
-        case energyLevel = "energy_level"
-        case status
-        case time
-        case createdAt = "created_at"
-    }
-    
-    init(
-        id: Int64,
-        title: String,
-        description: String? = nil,
-        category: String = "general",
-        priority: TaskPriority = .p2,
-        energyLevel: EnergyLevel = .medium,
-        status: String = "pending",
-        time: String = "Today"
-    ) {
+/// Core Working State Task Item model conforming to GRDB TableRecord and Codable
+public struct TaskItem: Identifiable, Codable, Sendable, FetchableRecord, PersistableRecord, TableRecord {
+    public static let databaseTableName = "taskRecord"
+
+    public var id: Int64
+    public var title: String
+    public var category: String
+    public var priority: TaskPriority
+    public var energyLevel: EnergyLevel
+    public var status: String
+    public var time: String
+
+    public init(id: Int64, title: String, category: String, priority: TaskPriority, energyLevel: EnergyLevel, status: String, time: String) {
         self.id = id
         self.title = title
-        self.description = description
         self.category = category
         self.priority = priority
         self.energyLevel = energyLevel
         self.status = status
         self.time = time
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decode(Int64.self, forKey: .id)
-        self.title = try container.decode(String.self, forKey: .title)
-        self.description = try container.decodeIfPresent(String.self, forKey: .description)
-        self.category = try container.decodeIfPresent(String.self, forKey: .category) ?? "general"
-        
-        // Priority parsing (support P1, P2, P3 or Int 1, 2, 3)
-        if let pString = try? container.decode(String.self, forKey: .priority),
-           let pVal = TaskPriority(rawValue: pString.uppercased()) {
-            self.priority = pVal
-        } else if let pInt = try? container.decode(Int.self, forKey: .priority) {
-            switch pInt {
-            case 1: self.priority = .p1
-            case 3: self.priority = .p3
-            default: self.priority = .p2
-            }
-        } else {
-            self.priority = .p2
-        }
-        
-        // Energy Level parsing
-        if let eString = try? container.decode(String.self, forKey: .energyLevel),
-           let eVal = EnergyLevel(rawValue: eString.lowercased()) {
-            self.energyLevel = eVal
-        } else {
-            self.energyLevel = .medium
-        }
-        
-        self.status = try container.decodeIfPresent(String.self, forKey: .status) ?? "pending"
-        
-        if let tString = try container.decodeIfPresent(String.self, forKey: .time) {
-            self.time = tString
-        } else if let cString = try container.decodeIfPresent(String.self, forKey: .createdAt) {
-            self.time = cString
-        } else {
-            self.time = "Today"
-        }
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(title, forKey: .title)
-        try container.encode(description, forKey: .description)
-        try container.encode(category, forKey: .category)
-        try container.encode(priority, forKey: .priority)
-        try container.encode(energyLevel, forKey: .energyLevel)
-        try container.encode(status, forKey: .status)
-        try container.encode(time, forKey: .time)
     }
 }
