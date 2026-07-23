@@ -5,8 +5,9 @@ Last-Write-Wins (LWW) Registers for scalar attributes, and Multi-Value Registers
 for divergent semantic property attributes.
 """
 
+import json
 from typing import Any, Dict, Set, List, Tuple, Optional
-from ledger import ClewLedgerEvent, ClewEventLedger
+from ledger import ClewLedgerEvent, ClewEventLedger, compute_hash_hex
 
 class AddWinsORSet:
     """
@@ -182,3 +183,11 @@ class GraphCRDT:
     def get_divergent_mvr_entries(self) -> Dict[Tuple[str, str], MultiValueRegister]:
         """Returns map of entity property keys to MVRs containing divergent concurrent values."""
         return {key: mvr for key, mvr in self.semantic_mvr.items() if mvr.is_divergent()}
+
+    def get_state_root_hash(self) -> str:
+        """Computes deterministic hash of the active GraphCRDT snapshot."""
+        from merkle_dag import serialize_graph_crdt
+        snapshot = serialize_graph_crdt(self)
+        encoded = json.dumps(snapshot, sort_keys=True, separators=(',', ':')).encode('utf-8')
+        return compute_hash_hex(encoded)
+

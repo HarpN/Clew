@@ -9,6 +9,7 @@ import sys
 import json
 import socket
 import asyncio
+import logging
 from typing import Optional, Dict, Any
 
 from version_engine import VersionEngine
@@ -16,14 +17,17 @@ from reconciliation import ReconciliationEngine
 from watchdog import StateWatchdog
 from merkle_dag import serialize_graph_crdt
 
+logger = logging.getLogger("clew.ipc")
+
 class ClewIPCServer:
     """
     Asynchronous IPC server for dispatching JSON commands to Clew engines.
+    Provides Unix Domain Socket / TCP transport for local orchestration.
     """
 
     def __init__(
         self,
-        version_engine: VersionEngine,
+        version_engine: Optional[VersionEngine] = None,
         reconciliation_engine: Optional[ReconciliationEngine] = None,
         watchdog: Optional[StateWatchdog] = None,
         socket_path: str = "/tmp/clew_ipc.sock",
@@ -37,24 +41,36 @@ class ClewIPCServer:
         self.host = host
         self.port = port
         self.server: Optional[asyncio.AbstractServer] = None
+        self.is_unix_socket: bool = False
 
     async def start_async(self):
         """Starts the IPC server listening on either Unix Domain Socket or TCP fallback."""
+        # Clean stale socket file if present on POSIX systems
+        if hasattr(os, "path") and os.path.exists(self.socket_path):
+            try:
+                os.remove(self.socket_path)
+                logger.info(f"[IPC] Cleaned stale socket file at {self.socket_path}")
+            except Exception as e:
+                logger.warning(f"[IPC] Failed to remove stale socket: {e}")
+
         use_unix = hasattr(socket, "AF_UNIX") and sys.platform != "win32"
         if use_unix:
-            # Ensure path directory exists
             dir_name = os.path.dirname(self.socket_path)
             if dir_name and not os.path.exists(dir_name):
                 os.makedirs(dir_name, exist_ok=True)
-            # Remove old socket file if exists
-            if os.path.exists(self.socket_path):
-                try:
-                    os.unlink(self.socket_path)
-                except OSError:
-                    pass
-            self.server = await asyncio.start_unix_server(self._handle_client, path=self.socket_path)
+            try:
+                self.server = await asyncio.start_unix_server(self._handle_client, path=self.socket_path)
+                self.is_unix_socket = True
+                logger.info(f"[IPC] Listening on Unix Domain Socket: {self.socket_path}")
+            except (AttributeError, NotImplementedError, OSError) as e:
+                logger.warning(f"[IPC] Unix socket failed ({e}), falling back to TCP socket")
+                self.server = await asyncio.start_server(self._handle_client, host=self.host, port=self.port)
+                self.is_unix_socket = False
+                logger.info(f"[IPC] Listening on TCP Fallback Socket: {self.host}:{self.port}")
         else:
             self.server = await asyncio.start_server(self._handle_client, host=self.host, port=self.port)
+            self.is_unix_socket = False
+            logger.info(f"[IPC] Listening on TCP Fallback Socket: {self.host}:{self.port}")
 
     async def stop(self):
         """Stops the IPC server and cleans up resources."""
@@ -62,14 +78,14 @@ class ClewIPCServer:
             self.server.close()
             await self.server.wait_closed()
             self.server = None
+            logger.info("[IPC] IPC Socket Server shut down gracefully.")
 
-        # Clean up UDS file if applicable
-        use_unix = hasattr(socket, "AF_UNIX") and sys.platform != "win32"
-        if use_unix and os.path.exists(self.socket_path):
+        if self.is_unix_socket and os.path.exists(self.socket_path):
             try:
-                os.unlink(self.socket_path)
-            except OSError:
-                pass
+                os.remove(self.socket_path)
+                logger.info(f"[IPC] Unbound Unix socket file {self.socket_path}")
+            except Exception as e:
+                logger.error(f"[IPC] Error unbinding socket file: {e}")
 
     async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Handles single incoming socket connection and reads newline-terminated messages."""
@@ -109,6 +125,8 @@ class ClewIPCServer:
             return {"status": "error", "error": "Missing command field"}
 
         if command == "COMMIT":
+            if not self.version_engine:
+                return {"status": "error", "error": "Version engine not configured"}
             message = request.get("message", "IPC Commit")
             try:
                 commit = self.version_engine.commit(message=message)
@@ -123,6 +141,8 @@ class ClewIPCServer:
                 return {"status": "error", "error": f"Commit failed: {str(e)}"}
 
         elif command == "CHECKOUT":
+            if not self.version_engine:
+                return {"status": "error", "error": "Version engine not configured"}
             commit_hash = request.get("commit_hash")
             if not commit_hash:
                 return {"status": "error", "error": "Missing commit_hash parameter"}
@@ -172,6 +192,8 @@ class ClewIPCServer:
                 return {"status": "error", "error": f"Health check failed: {str(e)}"}
 
         elif command == "INSPECT_STATE":
+            if not self.version_engine:
+                return {"status": "error", "error": "Version engine not configured"}
             try:
                 state_data = serialize_graph_crdt(self.version_engine.crdt)
                 return {

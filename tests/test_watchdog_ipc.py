@@ -12,7 +12,7 @@ import os
 from crdt_engine import GraphCRDT
 from ledger import ClewEventLedger
 from version_engine import VersionEngine
-from watchdog import StateWatchdog
+from watchdog import StateWatchdog, WatchdogDaemon
 from ipc_socket import ClewIPCServer, ClewIPCClient
 from reconciliation import ReconciliationEngine
 from merkle_dag import serialize_graph_crdt
@@ -176,6 +176,33 @@ class TestWatchdogIPC(unittest.IsolatedAsyncioTestCase):
 
         finally:
             await server.stop()
+
+    async def test_watchdog_daemon_periodic_auditing(self):
+        """
+        Tests WatchdogDaemon background polling, drift detection, and auto-recovery execution.
+        """
+        self.ledger.append("NODE_ADD", target_id="node_daemon")
+        self.crdt.apply_ledger(self.ledger)
+        self.version_engine.commit(message="Daemon C1")
+
+        daemon = WatchdogDaemon(watchdog_instance=self.watchdog, check_interval=1)
+        await daemon.start()
+        self.assertTrue(daemon.is_running)
+
+        # Mutate CRDT directly to trigger drift
+        self.crdt.nodes.add("tampered_by_drift", "tag_drift")
+        self.assertTrue(self.watchdog.detect_drift())
+
+        # Allow daemon audit loop to run and execute auto recovery
+        await asyncio.sleep(1.2)
+
+        # Verify auto-recovery restored valid state
+        self.assertFalse(self.crdt.nodes.contains("tampered_by_drift"))
+        self.assertFalse(self.watchdog.detect_drift())
+
+        await daemon.stop()
+        self.assertFalse(daemon.is_running)
+
 
 if __name__ == "__main__":
     unittest.main()

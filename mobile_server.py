@@ -1,16 +1,19 @@
 """
 mobile_server.py - Mobile Web Hub API & Static Asset Server for Clew
-Exposes REST API endpoints for tasks, chat timeline, and LiveKit WebRTC token generation,
-and serves static web assets from the mobile/ directory.
+Exposes REST API endpoints for tasks, chat timeline, LiveKit WebRTC token generation,
+and Server-Sent Events (SSE) token streaming for mobile/native iOS clients.
 """
 
 import os
 import sys
+import json
+import asyncio
 import logging
-from typing import Optional, Dict, Any, List
+from typing import AsyncGenerator, Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # Access root workspace
@@ -23,26 +26,31 @@ import orchestrator
 import distillery
 import graph_memory
 from router import ModelRouter
+from brain_orchestrator_v5 import CognitiveBrainV5
 
 router_instance = ModelRouter()
-
-from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("clew.mobile_server")
 
-app = FastAPI(title="Clew Mobile Hub API", version="2.0.0")
+app = FastAPI(title="Clew V5 Mobile Proxy API", version="2.0.0")
 
+# Enable CORS for local Xcode Simulator and Tailscale clients
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+brain = CognitiveBrainV5()
 
-# Models
+class ChatRequest(BaseModel):
+    prompt: str
+    goal_tether_id: str = "mobile_default"
+    manual_override_key: Optional[str] = None
+
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -51,6 +59,56 @@ class TaskCreate(BaseModel):
 
 class TaskStatusUpdate(BaseModel):
     status: str
+
+@app.post("/api/chat/stream")
+async def chat_stream_endpoint(request: ChatRequest):
+    """
+    Server-Sent Events (SSE) endpoint yielding token-by-token Broca Area responses
+    to the native Swift iOS client.
+    """
+    logger.info(f"[MOBILE_API] Received streaming request: '{request.prompt[:40]}...'")
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        try:
+            success, result_stream, persona_name = await brain.process_thought_cycle_v5(
+                user_prompt=request.prompt,
+                goal_tether_id=request.goal_tether_id,
+                manual_override_key=request.manual_override_key
+            )
+
+            # 1. Send initial metadata event (Persona name, status)
+            init_payload = json.dumps({"type": "init", "persona": persona_name, "success": success})
+            yield f"data: {init_payload}\n\n"
+
+            if not success:
+                # Handle constraint guard vetoes instantly
+                veto_payload = json.dumps({"type": "veto", "text": str(result_stream)})
+                yield f"data: {veto_payload}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
+            # 2. Handle string vs stream generator
+            if isinstance(result_stream, str):
+                chunk_payload = json.dumps({"type": "token", "text": result_stream})
+                yield f"data: {chunk_payload}\n\n"
+            else:
+                async for token in result_stream:
+                    if token:
+                        chunk_payload = json.dumps({"type": "token", "text": token})
+                        yield f"data: {chunk_payload}\n\n"
+                        # Yield control briefly to ensure low-latency socket flushing
+                        await asyncio.sleep(0.001)
+
+            # 3. Yield completion signal
+            yield "data: [DONE]\n\n"
+
+        except Exception as e:
+            logger.error(f"[MOBILE_API] SSE Streaming error: {e}")
+            err_payload = json.dumps({"type": "error", "error": str(e)})
+            yield f"data: {err_payload}\n\n"
+            yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 # API Routes
 @app.get("/api/tasks")

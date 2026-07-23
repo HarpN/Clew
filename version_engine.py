@@ -35,6 +35,12 @@ class VersionEngine:
         self.head_commit_hash = commit.commit_hash
         return commit
 
+    def get_head_commit(self) -> Optional[MerkleCommit]:
+        """Returns the current HEAD MerkleCommit, or None if DAG is empty."""
+        if not self.head_commit_hash:
+            return None
+        return self.dag.get_commit(self.head_commit_hash)
+
     def checkout(self, commit_hash: str) -> bool:
         """
         Atomically replaces/reconstructs the current GraphCRDT state to match the snapshot at commit_hash.
