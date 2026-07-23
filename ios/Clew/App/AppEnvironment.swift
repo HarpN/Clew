@@ -1,29 +1,15 @@
 import Foundation
-import Combine
 
-/// Environment configuration for Clew iOS & iPadOS native client.
-/// Manages Tailscale IP, local gateway URLs, and engine connectivity settings.
-final class AppEnvironment: ObservableObject {
-    static let shared = AppEnvironment()
-    
-    @Published var baseURL: String
-    @Published var liveKitURL: String
-    @Published var isOfflineMode: Bool = false
-    @Published var apiTimeout: TimeInterval = 10.0
-    
-    init(
-        baseURL: String = "https://clew-brain.local:8000",
-        liveKitURL: String = "wss://livekit.local"
-    ) {
-        self.baseURL = ProcessInfo.processInfo.environment["CLEW_BASE_URL"] ?? baseURL
-        self.liveKitURL = ProcessInfo.processInfo.environment["LIVEKIT_URL"] ?? liveKitURL
+public enum AppEnvironment {
+    /// Active API Proxy Base URL pointing to local server or Tailscale mesh IP
+    public static var baseURL: String {
+        #if DEBUG
+        return ProcessInfo.processInfo.environment["CLEW_API_URL"] ?? "http://127.0.0.1:8000"
+        #else
+        return "http://100.110.120.130:8000" // Tailscale mesh IP
+        #endif
     }
     
-    func updateBaseURL(_ newURL: String) {
-        var formatted = newURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        if formatted.hasSuffix("/") {
-            formatted.removeLast()
-        }
-        self.baseURL = formatted
-    }
+    public static let appVersion = "5.0.0"
+    public static let buildNumber = "1"
 }

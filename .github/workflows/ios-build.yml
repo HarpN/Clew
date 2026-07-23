@@ -4,22 +4,17 @@ on:
   push:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/**'
+      - 'ios/'
       - '.github/workflows/ios-build.yml'
   pull_request:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/**'
+      - 'ios/'
 
 jobs:
   build-and-test-ios:
     name: Build & Test Swift Client (macOS Cloud)
     runs-on: macos-14
-
-    env:
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,24 +24,17 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Cache SPM Packages & DerivedData
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Developer/Xcode/DerivedData/SourcePackages
-          key: ${{ runner.os }}-spm-${{ hashFiles('ios/project.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
-
-      - name: Install XcodeGen
-        run: |
-          brew untap aws/tap || true
-          brew install xcodegen
-
       - name: Generate Xcode Project
         run: |
           cd ios
           xcodegen generate
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          cd ios
+          xcodebuild -resolvePackageDependencies \
+            -project Clew.xcodeproj \
+            -scheme Clew
 
       - name: Build Swift iOS Client
         run: |

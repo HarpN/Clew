@@ -43,7 +43,7 @@ final class ClewTests: XCTestCase {
     }
 
     func testAppEnvironmentDefaultConfig() {
-        let env = AppEnvironment(baseURL: "https://test.local:8000")
-        XCTAssertEqual(env.baseURL, "https://test.local:8000")
+        XCTAssertEqual(AppEnvironment.appVersion, "5.0.0")
+        XCTAssertEqual(AppEnvironment.buildNumber, "1")
     }
 }

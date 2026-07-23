@@ -44,7 +44,8 @@ public final class LiveKitVoiceManager: ObservableObject {
             let sessionInfo = try await ClewAPIService.shared.fetchLiveKitToken()
             self.roomName = sessionInfo.room
             
-            let newRoom = Room(delegate: self)
+            let newRoom = Room()
+            newRoom.add(delegate: self)
             try await newRoom.connect(url: sessionInfo.url, token: sessionInfo.token)
             self.room = newRoom
             
@@ -107,7 +108,7 @@ public final class LiveKitVoiceManager: ObservableObject {
     }
     
     nonisolated deinit {
-        // Safe nonisolated deinit
+        // Nonisolated deinit safety wrapper
     }
 }
 

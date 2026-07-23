@@ -6,7 +6,7 @@ public final class ClewAPIService: @unchecked Sendable {
     public static let shared = ClewAPIService()
     
     /// Base URL configured for Tailscale mesh IP or local testing
-    public var baseURL: String = "http://127.0.0.1:8000"
+    public var baseURL: String = AppEnvironment.baseURL
     
     private init() {}
     
