@@ -4,12 +4,12 @@ on:
   push:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/**'
+      - 'ios/'
       - '.github/workflows/ios-build.yml'
   pull_request:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/**'
+      - 'ios/'
 
 jobs:
   build-and-test-ios:
@@ -37,6 +37,7 @@ jobs:
         run: |
           cd ios
           xcodebuild build \
+            -project Clew.xcodeproj \
             -scheme Clew \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
@@ -47,6 +48,7 @@ jobs:
         run: |
           cd ios
           xcodebuild test \
+            -project Clew.xcodeproj \
             -scheme Clew \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
