@@ -25,6 +25,14 @@ jobs:
         with:
           xcode-version: '15.4'
 
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          cd ios
+          xcodegen generate
+
       - name: Build Swift iOS Client
         run: |
           cd ios

@@ -1,0 +1,34 @@
+name: Clew
+options:
+  bundleIdPrefix: com.giraffe.clew
+targets:
+  Clew:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - Clew
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.giraffe.clew
+    info:
+      properties:
+        CFBundleDisplayName: Clew
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+
+  ClewTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - ClewTests
+    dependencies:
+      - target: Clew
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
