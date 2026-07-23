@@ -148,22 +148,4 @@ final class ClewAPIService {
         let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         return (dict?["success"] as? Bool) ?? false
     }
-    
-    /// Fetch token for LiveKit sub-500ms WebRTC voice session
-    func fetchLiveKitToken() async throws -> (token: String, url: String, room: String) {
-        guard let url = URL(string: "\(baseURL)/api/livekit/token") else {
-            throw URLError(.badURL)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        
-        let token = dict?["token"] as? String ?? ""
-        let livekitURL = dict?["url"] as? String ?? AppEnvironment.shared.liveKitURL
-        let room = dict?["room"] as? String ?? "clew-voice-room"
-        
-        return (token: token, url: livekitURL, room: room)
-    }
 }
