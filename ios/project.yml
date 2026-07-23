@@ -2,22 +2,18 @@ name: Clew
 options:
   bundleIdPrefix: com.clew
   xcodeVersion: "15.4"
-
-schemes:
-  Clew:
-    build:
-      targets:
-        Clew: all
-    test:
-      testTargets:
-        - ClewTests
-
+  compatibilityVersion: "Xcode 15.0"
 targets:
   Clew:
     type: application
     platform: iOS
     deploymentTarget: "16.0"
-    sources: [Clew]
+    sources:
+      - path: Clew/App
+      - path: Clew/Models
+      - path: Clew/Services
+      - path: Clew/ViewModels
+      - path: Clew/Views
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
