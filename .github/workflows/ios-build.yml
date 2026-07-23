@@ -29,6 +29,15 @@ jobs:
         with:
           xcode-version: '15.4'
 
+      - name: Cache SPM Packages & DerivedData
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/project.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
       - name: Install XcodeGen
         run: |
           brew untap aws/tap || true
