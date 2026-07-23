@@ -5,12 +5,12 @@ on:
   push:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/'
+      - 'ios/**'
       - '.github/workflows/ios-build.yml'
   pull_request:
     branches: [ "v2", "main" ]
     paths:
-      - 'ios/'
+      - 'ios/**'
 
 jobs:
   build-and-test-ios:
