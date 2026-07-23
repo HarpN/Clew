@@ -114,7 +114,7 @@ public final class LiveKitVoiceManager: ObservableObject {
 
 // MARK: - RoomDelegate Conformance
 extension LiveKitVoiceManager: RoomDelegate {
-    nonisolated public func room(_ room: Room, didUpdateConnectionState connectionState: ConnectionState, oldValue: ConnectionState) {
+    nonisolated public func room(_ room: Room, didUpdateConnectionState connectionState: ConnectionState, from oldValue: ConnectionState) {
         Task { @MainActor in
             switch connectionState {
             case .connected:
