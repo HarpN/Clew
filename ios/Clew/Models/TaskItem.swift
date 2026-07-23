@@ -109,4 +109,16 @@ struct TaskItem: Identifiable, Codable {
             self.time = "Today"
         }
     }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(description, forKey: .description)
+        try container.encode(category, forKey: .category)
+        try container.encode(priority, forKey: .priority)
+        try container.encode(energyLevel, forKey: .energyLevel)
+        try container.encode(status, forKey: .status)
+        try container.encode(time, forKey: .time)
+    }
 }

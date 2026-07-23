@@ -6,7 +6,7 @@ enum MessageSpeaker: String, Codable {
     case system = "system"
 }
 
-struct ChatMessage: Identifiable, Codable, Equatable {
+struct ChatMessage: Identifiable, Decodable, Equatable {
     let id: String
     let speaker: MessageSpeaker
     let content: String
@@ -18,7 +18,6 @@ struct ChatMessage: Identifiable, Codable, Equatable {
         case speaker
         case content
         case timestamp
-        case created_at
         case source
     }
     
