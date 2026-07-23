@@ -2,6 +2,7 @@ name: Clew
 options:
   bundleIdPrefix: com.clew
   xcodeVersion: "15.4"
+  postGenCommand: sed -i '' 's/objectVersion = [0-9]*/objectVersion = 60/g' Clew.xcodeproj/project.pbxproj
 targets:
   Clew:
     type: application
