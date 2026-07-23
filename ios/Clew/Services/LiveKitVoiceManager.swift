@@ -120,30 +120,3 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
         // Waveform timer and room cleanup are safely handled in disconnect() before deallocation.
     }
 }
-
-// MARK: - API Service LiveKit Extension
-extension ClewAPIService {
-    func fetchLiveKitToken() async throws -> LiveKitSessionInfo {
-        guard let url = URL(string: "\(baseURL)/api/livekit/token") else {
-            throw URLError(.badURL)
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            // Fallback mock token response if offline server testing
-            return LiveKitSessionInfo(
-                token: "mock_jwt_token",
-                url: "wss://clew-livekit.local:7880",
-                room: "clew-default-room"
-            )
-        }
-        
-        return try JSONDecoder().decode(LiveKitSessionInfo.self, from: data)
-    }
-}

@@ -1,60 +1,63 @@
 import Foundation
 import Combine
 
-final class ClewAPIService {
-    static let shared = ClewAPIService()
+/// REST & SSE API Client for Clew FastAPI Proxy Server
+public final class ClewAPIService: @unchecked Sendable {
+    public static let shared = ClewAPIService()
     
-    // Configured to point to Tailscale IP or Local Server
-    @Published var baseURL: String = AppEnvironment.shared.baseURL
+    /// Base URL configured for Tailscale mesh IP or local testing
+    public var baseURL: String = "http://127.0.0.1:8000"
     
-    private var cancellables = Set<AnyCancellable>()
+    private init() {}
     
-    init() {
-        AppEnvironment.shared.$baseURL
-            .sink { [weak self] newURL in
-                self?.baseURL = newURL
-            }
-            .store(in: &cancellables)
-    }
-    
-    /// Fetch all tasks from working state database
-    func fetchWorkingState() async throws -> [TaskItem] {
+    /// Fetches active working state tasks from /api/tasks
+    public func fetchWorkingState() async throws -> [TaskItem] {
         guard let url = URL(string: "\(baseURL)/api/tasks") else {
             throw URLError(.badURL)
         }
         let (data, response) = try await URLSession.shared.data(from: url)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
+        
         return try JSONDecoder().decode([TaskItem].self, from: data)
     }
     
-    /// Submit prompt/dialogue to Clew brain orchestrator (unary response)
-    func sendPrompt(_ prompt: String) async throws -> String {
+    /// Sends prompt command to /api/chat
+    public func sendPrompt(_ prompt: String, tetherID: String = "mobile_default") async throws -> String {
         guard let url = URL(string: "\(baseURL)/api/chat") else {
             throw URLError(.badURL)
         }
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = [
-            "message": prompt,
-            "source": "ios_native_client"
+        let body: [String: String] = [
+            "prompt": prompt,
+            "goal_tether_id": tetherID
         ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = try JSONEncoder().encode(body)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
             throw URLError(.badServerResponse)
         }
         
-        let responseDict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        return responseDict?["reply"] as? String ?? responseDict?["response"] as? String ?? "No response"
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let responseText = json["response"] as? String {
+            return responseText
+        }
+        
+        return "Command processed."
     }
     
     /// Connects to /api/chat/stream and yields token strings as they arrive from Broca's Area.
-    func streamPrompt(_ prompt: String, tetherID: String = "mobile_default") -> AsyncThrowingStream<String, Error> {
+    public func streamPrompt(_ prompt: String, tetherID: String = "mobile_default") -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             Task {
                 guard let url = URL(string: "\(self.baseURL)/api/chat/stream") else {
@@ -112,7 +115,7 @@ final class ClewAPIService {
     }
     
     /// Create a new task item
-    func createTask(title: String, priority: TaskPriority, energyLevel: EnergyLevel) async throws -> Int64 {
+    public func createTask(title: String, priority: TaskPriority, energyLevel: EnergyLevel) async throws -> Int64 {
         guard let url = URL(string: "\(baseURL)/api/tasks") else {
             throw URLError(.badURL)
         }
@@ -133,7 +136,7 @@ final class ClewAPIService {
     }
     
     /// Update task status
-    func updateTaskStatus(id: Int64, status: String) async throws -> Bool {
+    public func updateTaskStatus(id: Int64, status: String) async throws -> Bool {
         guard let url = URL(string: "\(baseURL)/api/tasks/\(id)/status") else {
             throw URLError(.badURL)
         }
@@ -147,5 +150,32 @@ final class ClewAPIService {
         let (data, _) = try await URLSession.shared.data(for: request)
         let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         return (dict?["success"] as? Bool) ?? false
+    }
+    
+    /// Fetches LiveKit WebRTC session credentials from /api/livekit/token
+    public func fetchLiveKitToken() async throws -> LiveKitSessionInfo {
+        guard let url = URL(string: "\(baseURL)/api/livekit/token") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+            return try JSONDecoder().decode(LiveKitSessionInfo.self, from: data)
+        } catch {
+            // Fallback mock session token for offline testing
+            return LiveKitSessionInfo(
+                token: "mock_jwt_token",
+                url: "wss://clew-livekit.local:7880",
+                room: "clew-default-room"
+            )
+        }
     }
 }
