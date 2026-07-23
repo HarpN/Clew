@@ -1,0 +1,46 @@
+name: Build & Test Native iOS App
+
+on:
+  push:
+    branches: [ "v2", "main" ]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    branches: [ "v2", "main" ]
+    paths:
+      - 'ios/**'
+
+jobs:
+  build-and-test-ios:
+    name: Build & Test Swift Client (macOS Cloud)
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode Version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.4'
+
+      - name: Build Swift iOS Client
+        run: |
+          cd ios
+          xcodebuild build \
+            -scheme Clew \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Run Swift XCTest Suite
+        run: |
+          cd ios
+          xcodebuild test \
+            -scheme Clew \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
