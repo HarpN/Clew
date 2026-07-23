@@ -2,18 +2,36 @@ import Foundation
 import Combine
 
 @MainActor
-final class VoiceSessionViewModel: ObservableObject {
-    @Published var latencyMs: Int = 340
-    @Published var activeCodec: String = "Opus 48kHz"
-    @Published var transcripts: [ChatMessage] = []
-    @Published var isRecording: Bool = false
+public final class VoiceSessionViewModel: ObservableObject {
+    @Published public var isVoiceActive: Bool = false
+    @Published public var statusMessage: String = "Disconnected"
+    @Published public var audioPowerLevels: [Float] = Array(repeating: 0.1, count: 12)
     
-    func addTranscript(speaker: MessageSpeaker, text: String) {
-        let msg = ChatMessage(speaker: speaker, content: text, source: "webrtc_voice")
-        transcripts.append(msg)
+    private var cancellables = Set<AnyCancellable>()
+    private let voiceManager: LiveKitVoiceManager
+    
+    public init(voiceManager: LiveKitVoiceManager) {
+        self.voiceManager = voiceManager
+        
+        voiceManager.$connectionState
+            .map { $0.rawValue }
+            .assign(to: \.statusMessage, on: self)
+            .store(in: &cancellables)
+            
+        voiceManager.$audioPowerLevels
+            .assign(to: \.audioPowerLevels, on: self)
+            .store(in: &cancellables)
     }
     
-    func clearTranscripts() {
-        transcripts.removeAll()
+    public func toggleSession() {
+        if isVoiceActive {
+            voiceManager.disconnect()
+            isVoiceActive = false
+        } else {
+            Task {
+                await voiceManager.connect()
+                isVoiceActive = true
+            }
+        }
     }
 }

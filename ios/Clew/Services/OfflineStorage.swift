@@ -3,8 +3,8 @@ import GRDB
 
 /// Offline Cache & CRDT Local Storage Coordinator
 /// Manages SQLite/GRDB local database tables and pending mutation queues.
-final class OfflineStorage: @unchecked Sendable {
-    static let shared = OfflineStorage()
+public final class OfflineStorage: @unchecked Sendable {
+    public static let shared = OfflineStorage()
     
     private var dbQueue: DatabaseQueue?
     private let cacheFileName = "clew_working_state_cache.json"
@@ -28,7 +28,6 @@ final class OfflineStorage: @unchecked Sendable {
             
             let queue = try DatabaseQueue(path: dbURL.path, configuration: config)
             
-            // Migration pipeline for local task and state persistence
             var migrator = DatabaseMigrator()
             migrator.registerMigration("v1_create_tasks") { db in
                 try db.create(table: "taskRecord", ifNotExists: true) { t in
@@ -50,7 +49,7 @@ final class OfflineStorage: @unchecked Sendable {
     }
     
     /// Save tasks locally for offline resilience using atomic file writes & GRDB transaction
-    func saveCachedTasks(_ tasks: [TaskItem]) {
+    public func saveCachedTasks(_ tasks: [TaskItem]) {
         // 1. Write to JSON cache file
         do {
             let data = try JSONEncoder().encode(tasks)
@@ -80,7 +79,7 @@ final class OfflineStorage: @unchecked Sendable {
     }
     
     /// Load cached tasks when offline
-    func loadCachedTasks() -> [TaskItem] {
+    public func loadCachedTasks() -> [TaskItem] {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return [] }
         do {
             let data = try Data(contentsOf: fileURL)

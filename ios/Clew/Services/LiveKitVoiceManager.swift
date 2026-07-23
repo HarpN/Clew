@@ -3,34 +3,40 @@ import Combine
 import AVFoundation
 import LiveKit
 
-enum VoiceConnectionState: String, Sendable {
+public enum VoiceConnectionState: String, Sendable {
     case disconnected = "Disconnected"
     case connecting = "Connecting..."
     case connected = "Connected (Sub-500ms WebRTC)"
     case error = "Connection Error"
 }
 
-struct LiveKitSessionInfo: Codable, Sendable {
-    let token: String
-    let url: String
-    let room: String
+public struct LiveKitSessionInfo: Codable, Sendable {
+    public let token: String
+    public var url: String
+    public let room: String
+    
+    public init(token: String, url: String, room: String) {
+        self.token = token
+        self.url = url
+        self.room = room
+    }
 }
 
 @MainActor
-final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
-    @Published var connectionState: VoiceConnectionState = .disconnected
-    @Published var isMuted: Bool = false
-    @Published var isAgentSpeaking: Bool = false
-    @Published var audioPowerLevels: [Float] = Array(repeating: 0.1, count: 12)
-    @Published var roomName: String = ""
-    @Published var lastError: String? = nil
+public final class LiveKitVoiceManager: ObservableObject {
+    @Published public var connectionState: VoiceConnectionState = .disconnected
+    @Published public var isMuted: Bool = false
+    @Published public var isAgentSpeaking: Bool = false
+    @Published public var audioPowerLevels: [Float] = Array(repeating: 0.1, count: 12)
+    @Published public var roomName: String = ""
+    @Published public var lastError: String? = nil
     
     private var room: Room?
     private var waveformTimer: Timer?
     
-    init() {}
+    public init() {}
     
-    func connect() async {
+    public func connect() async {
         connectionState = .connecting
         lastError = nil
         
@@ -38,7 +44,6 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
             let sessionInfo = try await ClewAPIService.shared.fetchLiveKitToken()
             self.roomName = sessionInfo.room
             
-            // Connect using LiveKit 2.x SDK
             let newRoom = Room(delegate: self)
             try await newRoom.connect(url: sessionInfo.url, token: sessionInfo.token)
             self.room = newRoom
@@ -52,10 +57,12 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
         }
     }
     
-    func disconnect() {
+    public func disconnect() {
         stopAudioWaveformSimulation()
-        Task {
-            await room?.disconnect()
+        if let activeRoom = room {
+            Task {
+                await activeRoom.disconnect()
+            }
             self.room = nil
         }
         connectionState = .disconnected
@@ -63,10 +70,13 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
         audioPowerLevels = Array(repeating: 0.1, count: 12)
     }
     
-    func toggleMute() {
+    public func toggleMute() {
         isMuted.toggle()
-        Task {
-            try? await room?.localParticipant.setMicrophone(enabled: !isMuted)
+        if let activeRoom = room {
+            let muteState = isMuted
+            Task {
+                try? await activeRoom.localParticipant.setMicrophone(enabled: !muteState)
+            }
         }
     }
     
@@ -80,12 +90,10 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
                     return
                 }
                 
-                // Dynamic audio spectrum power levels simulation
                 self.audioPowerLevels = (0..<12).map { _ in
                     Float.random(in: 0.15...0.95)
                 }
                 
-                // Randomly toggle agent speaking indicator for testing waveform feedback
                 if Float.random(in: 0...1.0) < 0.1 {
                     self.isAgentSpeaking.toggle()
                 }
@@ -98,8 +106,14 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
         waveformTimer = nil
     }
     
-    // LiveKit 2.x RoomDelegate Callbacks
-    nonisolated func room(_ room: Room, didUpdateConnectionState connectionState: ConnectionState, oldValue: ConnectionState) {
+    nonisolated deinit {
+        // Safe nonisolated deinit
+    }
+}
+
+// MARK: - RoomDelegate Conformance
+extension LiveKitVoiceManager: RoomDelegate {
+    nonisolated public func room(_ room: Room, didUpdateConnectionState connectionState: ConnectionState, oldValue: ConnectionState) {
         Task { @MainActor in
             switch connectionState {
             case .connected:
@@ -112,11 +126,5 @@ final class LiveKitVoiceManager: ObservableObject, RoomDelegate {
                 break
             }
         }
-    }
-    
-    // Swift 5.10 / Swift 6 Concurrency Fix:
-    // deinit is nonisolated, so we ensure no @MainActor property teardown happens directly inside deinit.
-    nonisolated deinit {
-        // Waveform timer and room cleanup are safely handled in disconnect() before deallocation.
     }
 }
