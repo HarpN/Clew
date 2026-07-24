@@ -107,9 +107,6 @@ public final class LiveKitVoiceManager: ObservableObject {
         waveformTimer = nil
     }
     
-    nonisolated deinit {
-        // Nonisolated deinit safety wrapper
-    }
 }
 
 // MARK: - RoomDelegate Conformance
