@@ -1,33 +1,26 @@
 import SwiftUI
 
-struct AudioWaveformView: View {
-    let powerLevels: [Float]
-    let isSpeaking: Bool
+public struct AudioWaveformView: View {
+    @EnvironmentObject private var voiceManager: LiveKitVoiceManager
     
-    var body: some View {
+    public init() {}
+    
+    public var body: some View {
         HStack(spacing: 4) {
-            ForEach(0..<powerLevels.count, id: \.self) { index in
-                let level = CGFloat(powerLevels[index])
-                let barHeight = max(6, level * 36)
+            ForEach(0..<voiceManager.audioPowerLevels.count, id: \.self) { index in
+                let power = voiceManager.audioPowerLevels[index]
                 
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: isSpeaking ? [.cyan, .blue] : [.green, .mint]),
-                            startPoint: .bottom,
-                            endPoint: .top
-                        )
-                    )
-                    .frame(width: 4, height: barHeight)
-                    .animation(.spring(response: 0.15, dampingFraction: 0.5), value: level)
+                Capsule()
+                    .fill(voiceManager.connectionState == .connected ? Color.emerald : Color.gray.opacity(0.5))
+                    .frame(width: 4, height: max(4, CGFloat(power * 30)))
+                    .animation(.spring(response: 0.2, dampingFraction: 0.5), value: power)
             }
         }
-        .frame(height: 40)
-        .padding(.horizontal, 12)
-        .background(
-            Capsule()
-                .fill(Color.black.opacity(0.4))
-                .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 1))
-        )
+        .padding(.vertical, 8)
     }
+}
+
+// Custom Emerald color extension to match V5 branding
+extension Color {
+    static let emerald = Color(red: 16/255, green: 185/255, blue: 129/255)
 }
