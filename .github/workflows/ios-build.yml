@@ -1,6 +1,5 @@
 name: Build & Test Native iOS App
 
-
 on:
   push:
     branches: [ "v2", "main" ]
@@ -32,6 +31,8 @@ jobs:
         run: |
           cd ios
           xcodegen generate
+          # Force downgrade project objectVersion to 63 (Xcode 15) to fix XcodeGen 2.45.4 defaults
+          sed -i '' 's/objectVersion = [0-9][0-9];/objectVersion = 63;/g' Clew.xcodeproj/project.pbxproj
 
       - name: Resolve Swift Package Dependencies
         run: |
