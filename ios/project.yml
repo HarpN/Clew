@@ -6,7 +6,7 @@ targets:
   Clew:
     type: application
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources:
       - path: Clew/App
       - path: Clew/Models
@@ -27,7 +27,7 @@ targets:
   ClewTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "16.0"
+    deploymentTarget: "17.0"
     sources: [ClewTests]
     dependencies:
       - target: Clew
