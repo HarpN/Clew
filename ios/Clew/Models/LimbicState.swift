@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// 2D Limbic Mood Coordinates and Quadrant Representation
-struct LimbicState: Codable, Equatable {
+struct LimbicState: Codable, Equatable, Sendable {
     var valence: Double    // -1.0 (negative) to +1.0 (positive)
     var arousal: Double    // -1.0 (calm) to +1.0 (excited/stressed)
     var dominance: Double  // -1.0 (submissive) to +1.0 (dominant)

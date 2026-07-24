@@ -33,7 +33,7 @@ public struct ChatTimelineView: View {
                     }
                     .padding()
                 }
-                .onChange(of: briefViewModel.chatMessages.count) { _ in
+                .onChange(of: briefViewModel.chatMessages.count) {
                     if !briefViewModel.chatMessages.isEmpty {
                         proxy.scrollTo(briefViewModel.chatMessages.count - 1, anchor: .bottom)
                     }

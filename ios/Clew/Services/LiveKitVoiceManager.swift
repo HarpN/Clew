@@ -84,19 +84,20 @@ public final class LiveKitVoiceManager: ObservableObject {
     private func startAudioWaveformSimulation() {
         stopAudioWaveformSimulation()
         waveformTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let strongSelf = self else { return }
             Task { @MainActor in
-                guard let self = self, self.connectionState == .connected else { return }
-                if self.isMuted {
-                    self.audioPowerLevels = Array(repeating: 0.05, count: 12)
+                guard strongSelf.connectionState == .connected else { return }
+                if strongSelf.isMuted {
+                    strongSelf.audioPowerLevels = Array(repeating: 0.05, count: 12)
                     return
                 }
                 
-                self.audioPowerLevels = (0..<12).map { _ in
+                strongSelf.audioPowerLevels = (0..<12).map { _ in
                     Float.random(in: 0.15...0.95)
                 }
                 
                 if Float.random(in: 0...1.0) < 0.1 {
-                    self.isAgentSpeaking.toggle()
+                    strongSelf.isAgentSpeaking.toggle()
                 }
             }
         }

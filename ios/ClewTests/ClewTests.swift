@@ -8,12 +8,11 @@ final class ClewTests: XCTestCase {
         {
             "id": 42,
             "title": "Calibrate WebRTC Engine",
-            "description": "Sub-500ms latency test",
             "category": "voice",
             "priority": "P1",
-            "energy_level": "high",
+            "energyLevel": "high",
             "status": "pending",
-            "created_at": "2026-07-22 17:00:00"
+            "time": "5:00 PM"
         }
         """.data(using: .utf8)!
 

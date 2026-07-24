@@ -21,16 +21,20 @@ public final class VoiceSessionViewModel: ObservableObject {
         voiceManager.$audioPowerLevels
             .assign(to: \.audioPowerLevels, on: self)
             .store(in: &cancellables)
+        
+        // Keep isVoiceActive in sync with actual connection state
+        voiceManager.$connectionState
+            .map { $0 == .connected || $0 == .connecting }
+            .assign(to: \.isVoiceActive, on: self)
+            .store(in: &cancellables)
     }
     
     public func toggleSession() {
         if isVoiceActive {
             voiceManager.disconnect()
-            isVoiceActive = false
         } else {
             Task {
                 await voiceManager.connect()
-                isVoiceActive = true
             }
         }
     }

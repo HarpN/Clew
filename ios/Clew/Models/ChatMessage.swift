@@ -1,12 +1,12 @@
 import Foundation
 
-enum MessageSpeaker: String, Codable {
+enum MessageSpeaker: String, Codable, Sendable {
     case user = "user"
     case agent = "agent"
     case system = "system"
 }
 
-struct ChatMessage: Identifiable, Decodable, Equatable {
+struct ChatMessage: Identifiable, Decodable, Equatable, Sendable {
     let id: String
     let speaker: MessageSpeaker
     let content: String
